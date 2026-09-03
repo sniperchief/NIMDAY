@@ -1,0 +1,27 @@
+/node_modules
+/.next
+/out
+/build
+*.tsbuildinfo
+next-env.d.ts
+
+# env
+.env
+.env*.local
+.env.local
+
+# prisma
+/prisma/*.db
+/prisma/*.db-journal
+
+# local image uploads (dev storage fallback)
+/storage-uploads
+/public/uploads
+
+# misc
+.DS_Store
+*.log
+/coverage
+/spike/verify-node/node_modules
+
+/.pglite

@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nimday
+      POSTGRES_PASSWORD: nimday
+      POSTGRES_DB: nimday
+    ports:
+      - "5432:5432"
+    volumes:
+      - nimday_pgdata:/var/lib/postgresql/data
+
+volumes:
+  nimday_pgdata:

@@ -1,0 +1,78 @@
+// NIMday — Phase 1 schema (Creator flow + public birthday page).
+// Payment/Gift/Message models are intentionally NOT here yet — Phase 2.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Currency {
+  NIM
+  USDT // reserved for Phase 2 — never selectable in the Phase 1 UI
+}
+
+enum GiftType {
+  FUND // "Fund this gift" — contribute toward the target
+  BUY // "Buy this gift" — creator wants the actual item
+  EITHER // creator is happy with either
+}
+
+model User {
+  id            String    @id @default(cuid())
+  walletAddress String    @unique // Nimiq user-friendly address, e.g. "NQ.. ...."
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  birthday      Birthday?
+}
+
+model Birthday {
+  id          String    @id @default(cuid())
+  creator     User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId   String    @unique // Phase 1: one NIMday per wallet
+  slug        String    @unique
+  name        String
+  birthday    DateTime  @db.Date // birthday date; countdown uses month/day
+  message     String?
+  imageUrl    String?
+  theme       String    @default("confetti") // validated against src/lib/themes.ts
+  published   Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  wishes      Wish[]
+
+  @@index([published])
+}
+
+model Wish {
+  id           String   @id @default(cuid())
+  birthday     Birthday @relation(fields: [birthdayId], references: [id], onDelete: Cascade)
+  birthdayId   String
+  title        String
+  imageUrl     String?
+  description  String?
+  targetAmount Decimal  @db.Decimal(18, 5) // NIM has 5 decimal places
+  currency     Currency @default(NIM)
+  giftType     GiftType @default(EITHER)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([birthdayId])
+}
+
+/// Short-lived challenge for Sign-In-With-Nimiq. Consumed on first successful verify.
+model AuthNonce {
+  id        String    @id @default(cuid())
+  value     String    @unique
+  address   String // address that requested the challenge
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  @@index([expiresAt])
+}

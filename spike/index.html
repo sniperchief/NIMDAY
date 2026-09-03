@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NIMday Phase 0 Spike</title>
+<style>
+  body { font: 14px/1.5 -apple-system, system-ui, sans-serif; margin: 0; padding: 16px; background:#faf7f2; color:#1c1c1c; }
+  h1 { font-size: 16px; margin: 0 0 4px; }
+  p.sub { margin: 0 0 16px; color:#666; }
+  button { display:block; width:100%; padding:12px; margin:6px 0; font-size:14px; border:1px solid #d5cfc4;
+           border-radius:10px; background:#fff; text-align:left; }
+  button:active { background:#f0ebe2; }
+  pre#log { white-space:pre-wrap; word-break:break-word; background:#1c1c1c; color:#e8e8e8; padding:12px;
+            border-radius:10px; font-size:12px; min-height:120px; margin-top:12px; }
+  .grp { border:1px solid #e5dfd3; border-radius:12px; padding:10px 12px; margin:12px 0; background:#fff; }
+  .grp h2 { font-size:13px; margin:2px 0 8px; text-transform:uppercase; letter-spacing:.04em; color:#8a7f6a; }
+  input { width:100%; padding:10px; border:1px solid #d5cfc4; border-radius:8px; font-size:13px; margin:4px 0; box-sizing:border-box; }
+</style>
+</head>
+<body>
+  <h1>NIMday — Phase 0 Integration Spike</h1>
+  <p class="sub">Open this inside Nimiq Pay (Mini Apps → Custom URL). Not a product. Read-only checks run first; the rest need a tap.</p>
+
+  <div class="grp">
+    <h2>1. Nimiq provider</h2>
+    <button data-act="init">init() + detect window.nimiq / window.nimiqPay.language</button>
+    <button data-act="consensus">isConsensusEstablished()</button>
+    <button data-act="block">getBlockNumber()</button>
+    <button data-act="accounts">listAccounts() — returns user-friendly address?</button>
+  </div>
+
+  <div class="grp">
+    <h2>2 + 4. sign() — auth scheme probe</h2>
+    <input id="nonce" value="NIMday login&#10;nonce=abc123" />
+    <button data-act="sign-str">sign("&lt;nonce above&gt;") — record publicKey + signature</button>
+    <button data-act="sign-hex">sign({ message: "48656c6c6f", isHex:true }) — probe hex mode</button>
+    <p class="sub" style="margin:6px 0 0">Copy the JSON output into <code>verify-node/check-signature.cjs</code> to test server-side verification &amp; address derivation.</p>
+  </div>
+
+  <div class="grp">
+    <h2>2. sendBasicTransaction — return-value check (TESTNET ONLY)</h2>
+    <input id="tx-to" placeholder="recipient NQ… (your own testnet addr)" />
+    <input id="tx-val" value="100000" />
+    <button data-act="send-plain">sendBasicTransaction (0.001 NIM) → log exact return</button>
+    <button data-act="send-data">sendBasicTransactionWithData (data:"nimday:test") → log exact return</button>
+  </div>
+
+  <div class="grp">
+    <h2>3. data field limit probe (TESTNET ONLY)</h2>
+    <input id="data-len" value="64" />
+    <button data-act="send-data-n">send with N bytes of data (set N above) → observe accept/reject</button>
+  </div>
+
+  <div class="grp">
+    <h2>7. EVM provider / USDT-on-Polygon feasibility</h2>
+    <button data-act="eth-accounts">eth_requestAccounts</button>
+    <button data-act="eth-chain">eth_chainId (before switch)</button>
+    <button data-act="eth-switch-poly">wallet_switchEthereumChain → 0x89 (Polygon)</button>
+    <button data-act="eth-add-poly">wallet_addEthereumChain → 0x89 (if 4902)</button>
+    <button data-act="eth-gas">eth_getBalance (native POL) — is gas abstraction available?</button>
+  </div>
+
+  <pre id="log">ready.\n</pre>
+
+<script type="module">
+import { init, getHostLanguage } from 'https://cdn.jsdelivr.net/npm/@nimiq/mini-app-sdk@0.1.0/dist/index.js';
+
+const logEl = document.getElementById('log');
+const log = (...a) => { logEl.textContent += a.map(x => typeof x === 'string' ? x : JSON.stringify(x, null, 2)).join(' ') + '\n'; logEl.scrollTop = logEl.scrollHeight; };
+const USDT_POLYGON = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
+let nimiq = null;
+
+async function ensure() { if (!nimiq) nimiq = await init(); return nimiq; }
+
+const acts = {
+  async init() {
+    log('window.nimiq present before init:', !!window.nimiq);
+    log('window.nimiqPay.language:', getHostLanguage() ?? '(undefined)');
+    const t = Date.now();
+    nimiq = await init();
+    log(`init() resolved in ${Date.now() - t}ms. typeof nimiq:`, typeof nimiq);
+    log('nimiq keys:', Object.keys(nimiq));
+  },
+  async consensus() { log('isConsensusEstablished ->', await (await ensure()).isConsensusEstablished()); },
+  async block()     { log('getBlockNumber ->', await (await ensure()).getBlockNumber()); },
+  async accounts()  {
+    const r = await (await ensure()).listAccounts();
+    log('listAccounts ->', r);
+    if (Array.isArray(r)) log('first entry looks user-friendly (NQ…)?', /^NQ/.test(r[0].replace(/\s/g, '')));
+  },
+  async 'sign-str'() {
+    const r = await (await ensure()).sign(document.getElementById('nonce').value);
+    log('sign(string) ->', r);
+  },
+  async 'sign-hex'() {
+    const r = await (await ensure()).sign({ message: '48656c6c6f', isHex: true });
+    log('sign({isHex:true}) ->', r);
+  },
+  async 'send-plain'() {
+    const r = await (await ensure()).sendBasicTransaction({
+      recipient: document.getElementById('tx-to').value,
+      value: Number(document.getElementById('tx-val').value),
+    });
+    log('sendBasicTransaction RAW RETURN:', JSON.stringify(r), '| typeof:', typeof r, '| length:', (r||'').length);
+  },
+  async 'send-data'() {
+    const r = await (await ensure()).sendBasicTransactionWithData({
+      recipient: document.getElementById('tx-to').value,
+      value: Number(document.getElementById('tx-val').value),
+      data: 'nimday:test',
+    });
+    log('sendBasicTransactionWithData RAW RETURN:', JSON.stringify(r), '| typeof:', typeof r, '| length:', (r||'').length);
+  },
+  async 'send-data-n'() {
+    const n = Number(document.getElementById('data-len').value);
+    const data = 'x'.repeat(n);
+    try {
+      const r = await (await ensure()).sendBasicTransactionWithData({
+        recipient: document.getElementById('tx-to').value,
+        value: Number(document.getElementById('tx-val').value), data,
+      });
+      log(`data length ${n}: ACCEPTED ->`, JSON.stringify(r));
+    } catch (e) { log(`data length ${n}: REJECTED ->`, e?.message || String(e)); }
+  },
+  async 'eth-accounts'() { log('eth_requestAccounts ->', await window.ethereum.request({ method: 'eth_requestAccounts' })); },
+  async 'eth-chain'()    { log('eth_chainId ->', await window.ethereum.request({ method: 'eth_chainId' })); },
+  async 'eth-switch-poly'() {
+    try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x89' }] });
+      log('switch to 0x89 OK. eth_chainId ->', await window.ethereum.request({ method: 'eth_chainId' }));
+    } catch (e) { log('switch failed ->', e?.code, e?.message || String(e)); }
+  },
+  async 'eth-add-poly'() {
+    try { await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{
+      chainId: '0x89', chainName: 'Polygon', rpcUrls: ['https://polygon-bor-rpc.publicnode.com'],
+      nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 }, blockExplorerUrls: ['https://polygonscan.com'],
+    }] });
+      log('addEthereumChain OK. eth_chainId ->', await window.ethereum.request({ method: 'eth_chainId' }));
+    } catch (e) { log('addEthereumChain failed ->', e?.code, e?.message || String(e)); }
+  },
+  async 'eth-gas'() {
+    const [a] = await window.ethereum.request({ method: 'eth_accounts' });
+    log('native balance (wei hex) for', a, '->', await window.ethereum.request({ method: 'eth_getBalance', params: [a, 'latest'] }));
+    log('If 0x0 and a USDT transfer still succeeds, gas abstraction reaches mini apps. If it fails, it does not.');
+  },
+};
+
+document.body.addEventListener('click', async (e) => {
+  const act = e.target?.dataset?.act;
+  if (!act || !acts[act]) return;
+  log(`\n▶ ${act}`);
+  try { await acts[act](); } catch (err) { log('ERROR ->', err?.message || String(err), err?.code ? `(code ${err.code})` : ''); }
+});
+
+// auto-run the safe read-only checks
+(async () => {
+  try { await acts.init(); await acts.consensus(); await acts.block(); }
+  catch (e) { log('auto-checks stopped:', e?.message || String(e)); }
+})();
+</script>
+</body>
+</html>
