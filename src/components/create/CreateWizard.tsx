@@ -21,6 +21,7 @@ import type { WishInput } from "@/lib/validation";
 import { DetailsStep } from "./DetailsStep";
 import { WishesStep } from "./WishesStep";
 import { ConnectStep } from "./ConnectStep";
+import { GiftActivityPanel } from "./GiftActivityPanel";
 import { useDraft, draftFromEditor } from "./useDraft";
 import type { DraftWish } from "./types";
 
@@ -58,16 +59,22 @@ export function CreateWizard() {
 
   useEffect(() => {
     (async () => {
-      const [me, existing] = await Promise.all([getMe(), getMyBirthday()]);
-      if (me) setAuthedAddress(me.user.walletAddress);
-      if (existing) {
-        setBirthday(existing);
-        setDraft(draftFromEditor(existing));
-        if (existing.published && me) {
-          setPublishUrl(`${window.location.origin}/b/${existing.slug}`);
+      try {
+        const [me, existing] = await Promise.all([getMe(), getMyBirthday()]);
+        if (me) setAuthedAddress(me.user.walletAddress);
+        if (existing) {
+          setBirthday(existing);
+          setDraft(draftFromEditor(existing));
+          if (existing.published && me) {
+            setPublishUrl(`${window.location.origin}/b/${existing.slug}`);
+          }
         }
+      } catch {
+        // Nothing to restore (not signed in, or the API is unreachable) —
+        // fall through to an empty draft rather than blocking the whole page.
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -84,7 +91,7 @@ export function CreateWizard() {
         title: w.title || "Untitled wish",
         description: w.description || null,
         imageUrl: w.imageUrl || null,
-        targetAmount: w.targetAmount || "0",
+        targetNim: w.targetAmount || "0",
         currency: "NIM" as const,
         giftType: w.giftType,
       })),
@@ -209,6 +216,8 @@ export function CreateWizard() {
             </a>
           </div>
         </Card>
+
+        <GiftActivityPanel />
 
         <div className="text-center">
           <Button
@@ -343,13 +352,18 @@ export function CreateWizard() {
       </Card>
 
       {birthday?.published && step !== "done" && publishUrl && (
-        <p className="mt-4 text-center text-xs text-ink/50">
-          Your NIMday is already published at{" "}
-          <Link href={publishUrl} className="underline">
-            {publishUrl.replace(/^https?:\/\//, "")}
-          </Link>
-          . Publishing again will update it.
-        </p>
+        <>
+          <p className="mt-4 text-center text-xs text-ink/50">
+            Your NIMday is already published at{" "}
+            <Link href={publishUrl} className="underline">
+              {publishUrl.replace(/^https?:\/\//, "")}
+            </Link>
+            . Publishing again will update it.
+          </p>
+          <div className="mt-4">
+            <GiftActivityPanel />
+          </div>
+        </>
       )}
     </div>
   );

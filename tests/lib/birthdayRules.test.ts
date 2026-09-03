@@ -43,6 +43,7 @@ function wish(over: Partial<Wish> = {}): Wish {
     currency: "NIM",
     giftType: "EITHER",
     sortOrder: 0,
+    raisedLuna: 0n,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...over,

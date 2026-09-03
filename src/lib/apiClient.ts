@@ -2,8 +2,10 @@
 
 import type { EditorBirthday } from "@/lib/birthday";
 import type { WishInput } from "@/lib/validation";
+import type { PaymentIntentView, PaymentStatusView } from "@/lib/gifts/intent";
+import type { GiftActivity } from "@/lib/gifts/activity";
 
-export type { EditorBirthday };
+export type { EditorBirthday, PaymentIntentView, PaymentStatusView, GiftActivity };
 
 export interface ApiIssue {
   path: string;
@@ -97,10 +99,14 @@ export const getMe = () =>
 export const logout = () => api("/api/auth/logout", { method: "POST" });
 
 /* ---- birthday ---- */
+/** Null when there is no NIMday yet *or* nobody is signed in — both mean "nothing to load". */
 export const getMyBirthday = () =>
-  api<{ birthday: EditorBirthday | null }>("/api/birthdays/me").then(
-    (d) => d.birthday,
-  );
+  api<{ birthday: EditorBirthday | null }>("/api/birthdays/me")
+    .then((d) => d.birthday)
+    .catch((err) => {
+      if (err instanceof ApiError && err.status === 401) return null;
+      throw err;
+    });
 
 export const createBirthday = (input: {
   name: string;
@@ -153,6 +159,41 @@ export const deleteWish = (wishId: string) =>
   api<{ birthday: EditorBirthday }>(`/api/wishes/${wishId}`, {
     method: "DELETE",
   }).then((d) => d.birthday);
+
+/* ---- gifting (Phase 2) ---- */
+export const createGiftIntent = (input: {
+  slug: string;
+  wishId: string;
+  amountNim: string;
+  anonymous: boolean;
+  senderAddress?: string;
+}) =>
+  api<{ intent: PaymentIntentView }>("/api/gifts/intent", {
+    method: "POST",
+    body: JSON.stringify(input),
+  }).then((d) => d.intent);
+
+export const getPaymentStatus = (id: string) =>
+  api<{ payment: PaymentStatusView }>(`/api/gifts/intent/${id}`).then(
+    (d) => d.payment,
+  );
+
+export const submitGiftTransaction = (
+  id: string,
+  input: { txHash: string; senderAddress?: string },
+) =>
+  api<{ payment: PaymentStatusView }>(`/api/gifts/intent/${id}/submit`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  }).then((d) => d.payment);
+
+export const getMyGiftActivity = () =>
+  api<{ activity: GiftActivity }>("/api/birthdays/me/gifts")
+    .then((d) => d.activity)
+    .catch((err) => {
+      if (err instanceof ApiError && err.status === 401) return null;
+      throw err;
+    });
 
 /* ---- upload ---- */
 export const uploadImage = (file: File) => {

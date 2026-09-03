@@ -1,6 +1,6 @@
 import * as React from "react";
 import { getTheme } from "@/lib/themes";
-import { formatAmount, GIFT_TYPE_LABEL } from "@/lib/amount";
+import { GIFT_TYPE_LABEL } from "@/lib/amount";
 import { cn } from "@/components/ui";
 import { ThemeMotif } from "@/components/ThemeMotif";
 import { Countdown } from "@/components/Countdown";
@@ -10,9 +10,14 @@ export interface BirthdayCardWish {
   title: string;
   description: string | null;
   imageUrl: string | null;
-  targetAmount: string;
   currency: "NIM" | "USDT";
   giftType: "FUND" | "BUY" | "EITHER";
+  /** trimmed NIM string, e.g. "120" */
+  targetNim: string;
+  /** present on the public page (verified contributions only) */
+  raisedNim?: string;
+  progressPct?: number;
+  fulfilled?: boolean;
 }
 
 export interface BirthdayCardData {
@@ -35,14 +40,118 @@ function initials(name: string): string {
   );
 }
 
+function WishRow({
+  wish,
+  theme,
+  onGift,
+}: {
+  wish: BirthdayCardWish;
+  theme: ReturnType<typeof getTheme>;
+  onGift?: (wishId: string) => void;
+}) {
+  const showProgress = wish.raisedNim !== undefined;
+  const inner = (
+    <>
+      <div className="h-16 w-16 flex-none overflow-hidden rounded-xl bg-black/5">
+        {wish.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={wish.imageUrl}
+            alt={wish.title}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-xl opacity-40">
+            🎁
+          </div>
+        )}
+      </div>
+      <div className="min-w-0 flex-1 text-left">
+        <p className="truncate text-sm font-semibold">{wish.title}</p>
+        {wish.description ? (
+          <p className={cn("mt-0.5 line-clamp-2 text-xs", theme.muted)}>
+            {wish.description}
+          </p>
+        ) : null}
+
+        {showProgress ? (
+          <div className="mt-2">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10">
+              <div
+                className={cn("h-full rounded-full", theme.accent)}
+                style={{ width: `${Math.max(2, wish.progressPct ?? 0)}%` }}
+              />
+            </div>
+            <p className={cn("mt-1 text-xs", theme.muted)}>
+              {wish.fulfilled ? (
+                <span className="font-medium">🎉 Wish fulfilled!</span>
+              ) : (
+                <>
+                  {wish.raisedNim} / {wish.targetNim} NIM
+                </>
+              )}
+              <span className="mx-1.5">·</span>
+              {GIFT_TYPE_LABEL[wish.giftType]}
+            </p>
+          </div>
+        ) : (
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 text-xs font-medium",
+                theme.accent,
+                theme.accentText,
+              )}
+            >
+              {wish.targetNim} {wish.currency}
+            </span>
+            <span className={cn("text-xs", theme.muted)}>
+              {GIFT_TYPE_LABEL[wish.giftType]}
+            </span>
+          </div>
+        )}
+      </div>
+      {onGift ? (
+        <span
+          className={cn(
+            "self-center rounded-full px-3 py-1.5 text-xs font-medium",
+            theme.accent,
+            theme.accentText,
+          )}
+        >
+          Gift
+        </span>
+      ) : null}
+    </>
+  );
+
+  const base =
+    "flex w-full gap-3 rounded-2xl bg-black/[0.03] p-3 ring-1 ring-black/5";
+
+  return onGift ? (
+    <button
+      type="button"
+      onClick={() => onGift(wish.id)}
+      className={cn(base, "text-left transition hover:bg-black/[0.06] active:scale-[0.99]")}
+    >
+      {inner}
+    </button>
+  ) : (
+    <div className={base}>{inner}</div>
+  );
+}
+
 export function BirthdayCard({
   data,
   action,
+  onWishGift,
   className,
 }: {
   data: BirthdayCardData;
-  /** slot rendered under the wishes — the gift CTA / share row */
+  /** slot rendered under the wishes — the share row / footer */
   action?: React.ReactNode;
+  /** when provided, each wish becomes a button that starts the gift flow */
+  onWishGift?: (wishId: string) => void;
   className?: string;
 }) {
   const theme = getTheme(data.theme);
@@ -113,50 +222,17 @@ export function BirthdayCard({
         {data.wishes.length > 0 && (
           <section className="mt-8">
             <h2 className={cn("mb-3 text-sm font-semibold", theme.muted)}>
-              {data.wishes.length === 1 ? "One wish" : `${data.wishes.length} wishes`}
+              {data.wishes.length === 1
+                ? "One wish"
+                : `${data.wishes.length} wishes`}
+              {onWishGift ? (
+                <span className="ml-1 font-normal">· tap one to send a gift</span>
+              ) : null}
             </h2>
             <ul className="grid gap-3 sm:grid-cols-2">
               {data.wishes.map((w) => (
-                <li
-                  key={w.id}
-                  className="flex gap-3 rounded-2xl bg-black/[0.03] p-3 ring-1 ring-black/5"
-                >
-                  <div className="h-16 w-16 flex-none overflow-hidden rounded-xl bg-black/5">
-                    {w.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={w.imageUrl}
-                        alt={w.title}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-xl opacity-40">
-                        🎁
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{w.title}</p>
-                    {w.description ? (
-                      <p className={cn("mt-0.5 line-clamp-2 text-xs", theme.muted)}>
-                        {w.description}
-                      </p>
-                    ) : null}
-                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                      <span
-                        className={cn(
-                          "rounded-full px-2 py-0.5 text-xs font-medium",
-                          theme.accent,
-                          theme.accentText,
-                        )}
-                      >
-                        {formatAmount(w.targetAmount, w.currency)}
-                      </span>
-                      <span className={cn("text-xs", theme.muted)}>
-                        {GIFT_TYPE_LABEL[w.giftType]}
-                      </span>
-                    </div>
-                  </div>
+                <li key={w.id}>
+                  <WishRow wish={w} theme={theme} onGift={onWishGift} />
                 </li>
               ))}
             </ul>

@@ -6,9 +6,9 @@
  *   https:          https://nimpay.app/miniapps/open/<target>
  *
  * DEVICE CHECK PENDING: whether the target's full path + query (e.g.
- * `/b/<slug>?gift=1`) is preserved when Nimiq Pay opens the mini app. Keep all
- * deep-link construction here so it is a one-line change if the target needs to
- * be reshaped (e.g. slug moved to a fragment).
+ * `/b/<slug>?gift=1&intent=<id>`) is preserved when Nimiq Pay opens the mini
+ * app. All deep-link + gift-context construction lives here so it is a one-line
+ * change if the target must be reshaped (e.g. context moved to the fragment).
  */
 
 const HTTPS_BASE = "https://nimpay.app/miniapps/open/";
@@ -32,12 +32,35 @@ export function createNimiqPayDeepLink(
   return `${HTTPS_BASE}${target}`;
 }
 
-/** Deep link for the gift flow of a specific NIMday (Phase 2 will use this). */
+export interface GiftDeepLinkOptions {
+  /** payment-intent id to resume inside Nimiq Pay */
+  intentId?: string;
+  kind?: DeepLinkKind;
+}
+
+/**
+ * The URL of the public NIMday page carrying gift context. The page reads
+ * `?gift=1` to open the gift UI and `?intent=<id>` to resume a specific payment.
+ */
+export function giftTargetUrl(
+  origin: string,
+  slug: string,
+  intentId?: string,
+): string {
+  const base = `${origin.replace(/\/+$/, "")}/b/${encodeURIComponent(slug)}`;
+  const params = new URLSearchParams({ gift: "1" });
+  if (intentId) params.set("intent", intentId);
+  return `${base}?${params.toString()}`;
+}
+
+/** Deep link that opens a NIMday's gift flow inside Nimiq Pay. */
 export function giftDeepLink(
   origin: string,
   slug: string,
-  kind: DeepLinkKind = "https",
+  options: GiftDeepLinkOptions = {},
 ): string {
-  const target = `${origin.replace(/\/+$/, "")}/b/${encodeURIComponent(slug)}?gift=1`;
-  return createNimiqPayDeepLink(target, kind);
+  return createNimiqPayDeepLink(
+    giftTargetUrl(origin, slug, options.intentId),
+    options.kind ?? "https",
+  );
 }

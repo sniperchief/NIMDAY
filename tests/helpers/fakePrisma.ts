@@ -128,12 +128,29 @@ export const FAKE = {
     sortOrder: 0,
     description: null,
     imageUrl: null,
+    raisedLuna: 0n,
   }),
   authNonce: new Table("authNonce"),
+  paymentIntent: new Table("paymentIntent", {
+    status: "CREATED",
+    anonymous: false,
+    senderAddress: null,
+    txHash: null,
+    failureReason: null,
+    currency: "NIM",
+  }),
+  gift: new Table("gift", { status: "CONFIRMED", anonymous: false }),
+  processedTransaction: new Table("processedTransaction", {
+    chain: "nimiq",
+    reversedAt: null,
+  }),
   reset() {
     this.user.rows = [];
     this.birthday.rows = [];
     this.wish.rows = [];
     this.authNonce.rows = [];
+    this.paymentIntent.rows = [];
+    this.gift.rows = [];
+    this.processedTransaction.rows = [];
   },
 };

@@ -5,6 +5,7 @@ import { forbidden, notFound } from "@/lib/http";
 import { getBirthdayCountdown, type Countdown } from "@/lib/countdown";
 import { formatBirthdayDate } from "@/lib/validation";
 import { getTheme } from "@/lib/themes";
+import { LUNA_PER_NIM, lunaToNimString } from "@/lib/money";
 
 export type BirthdayWithWishes = Birthday & { wishes: Wish[] };
 
@@ -32,6 +33,21 @@ export interface EditorBirthday {
   wishes: EditorWish[];
 }
 
+export interface PublicWish {
+  id: string;
+  title: string;
+  description: string | null;
+  imageUrl: string | null;
+  currency: "NIM" | "USDT";
+  giftType: "FUND" | "BUY" | "EITHER";
+  targetNim: string; // trimmed, e.g. "120"
+  raisedNim: string; // verified contributions only, e.g. "45.5"
+  raisedLuna: string;
+  /** 0–100, capped */
+  progressPct: number;
+  fulfilled: boolean;
+}
+
 export interface PublicBirthday {
   slug: string;
   name: string;
@@ -39,12 +55,38 @@ export interface PublicBirthday {
   message: string | null;
   theme: string;
   imageUrl: string | null;
-  wishes: Omit<EditorWish, "sortOrder">[];
+  wishes: PublicWish[];
   countdown: {
     isToday: boolean;
     daysUntil: number;
     nextDateISO: string;
     turningAge: number | null;
+  };
+}
+
+function wishToPublic(w: Wish): PublicWish {
+  // targetAmount is NIM with up to 5 dp; convert to Luna with integer maths.
+  const targetStr = w.targetAmount.toString();
+  const [whole, frac = ""] = targetStr.split(".");
+  const targetLuna =
+    BigInt(whole) * LUNA_PER_NIM + BigInt(frac.padEnd(5, "0").slice(0, 5) || "0");
+  const raisedLuna = BigInt(w.raisedLuna ?? 0);
+  const pct =
+    targetLuna > 0n
+      ? Math.min(100, Number((raisedLuna * 10000n) / targetLuna) / 100)
+      : 0;
+  return {
+    id: w.id,
+    title: w.title,
+    description: w.description,
+    imageUrl: w.imageUrl,
+    currency: w.currency,
+    giftType: w.giftType,
+    targetNim: lunaToNimString(targetLuna),
+    raisedNim: lunaToNimString(raisedLuna),
+    raisedLuna: raisedLuna.toString(),
+    progressPct: pct,
+    fulfilled: targetLuna > 0n && raisedLuna >= targetLuna,
   };
 }
 
@@ -92,11 +134,7 @@ export function toPublicBirthday(
     imageUrl: b.imageUrl,
     wishes: [...b.wishes]
       .sort((a, d) => a.sortOrder - d.sortOrder)
-      .map((w) => {
-        const { sortOrder: _sortOrder, ...rest } = wishToEditor(w);
-        void _sortOrder;
-        return rest;
-      }),
+      .map(wishToPublic),
     countdown: {
       isToday: c.isToday,
       daysUntil: c.daysUntil,

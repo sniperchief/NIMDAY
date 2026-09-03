@@ -19,6 +19,9 @@
  */
 
 import { createHash } from "node:crypto";
+import { normalizeAddress } from "@/lib/nimiq/address";
+
+export { normalizeAddress };
 
 export type SignatureEncoding =
   | "raw-utf8"
@@ -111,10 +114,3 @@ export async function verifyNimiqSignature(
   return { valid: false, reason: "bad-signature" };
 }
 
-/** Normalise a Nimiq user-friendly address for comparison / storage. */
-export function normalizeAddress(address: string): string | null {
-  const compact = address.replace(/\s+/g, "").toUpperCase();
-  if (!/^NQ[0-9A-Z]{34}$/.test(compact)) return null;
-  // regroup into "NQxx xxxx ..." for canonical storage
-  return compact.replace(/(.{4})/g, "$1 ").trim();
-}

@@ -5,8 +5,11 @@
 A digital birthday card that doubles as a gift wishlist, built as a **Nimiq Pay Mini App**.
 Create a birthday page, add a few wishes, connect your Nimiq wallet, publish, and share one link.
 
-**Current status: Phase 1 — Creator flow + public birthday page.** No real gifting yet (Phase 2).
-See `PRD.md`, `TECHNICAL_PLAN.md`, `PHASE_0_RESULTS.md`, `PHASE_1_RESULTS.md`.
+**Current status: Phase 2 — NIM gifting + payment verification.**
+See `PRD.md`, `TECHNICAL_PLAN.md`, `PHASE_0_RESULTS.md`, `PHASE_1_RESULTS.md`, `PHASE_2_RESULTS.md`.
+
+> A payment only becomes a gift when the **backend** independently verifies a
+> confirmed on-chain transaction. The frontend can never declare success.
 
 ## Stack
 
@@ -28,7 +31,13 @@ npm run db:push               # apply the schema
 npm run db:seed               # optional: a demo NIMday at /b/demo-nimday
 
 npm run dev                   # http://localhost:3000
+npm run worker                # in a second shell — the verification worker
 ```
+
+The **verification worker** is what turns payments into gifts. It holds a long-lived
+`@nimiq/core` light client (mainnet consensus, no self-hosted node, no RPC), watches
+recipient addresses, and credits only transactions it has verified as `confirmed`.
+Nothing is credited without it.
 
 Wallet connection and Sign-In-With-Nimiq only work **inside the Nimiq Pay app**. For local
 development without a device, set `ALLOW_DEV_LOGIN=1` and `NEXT_PUBLIC_ALLOW_DEV_WALLET=1` —
@@ -40,7 +49,8 @@ with a deterministic keypair (never enabled in production).
 | | |
 |---|---|
 | `npm run dev` / `build` / `start` | Next.js |
-| `npm test` | Vitest (unit + route-level flow tests). DB integration tests run when `DATABASE_URL` is set. |
+| `npm run worker` | verification worker (`@nimiq/core` light client) |
+| `npm test` | Vitest (unit + route-level flow tests). DB integration tests run when `DATABASE_URL` is set; `RUN_MAINNET_TESTS=1` adds a live Nimiq mainnet check. |
 | `npm run typecheck` · `npm run lint` | `tsc --noEmit` · `next lint` |
 | `npm run db:dev` | in-process PGlite Postgres over a socket (dev only) |
 | `npm run db:push` · `db:seed` | Prisma schema sync · demo data |
@@ -55,19 +65,30 @@ src/
     b/[slug]/               public birthday page (SSR) + opengraph-image + not-found
     api/
       auth/                 nonce · verify · me · logout · dev-login
-      birthdays/            create · me · [id] (patch) · [id]/publish · [id]/wishes
+      birthdays/            create · me · me/gifts · [id] (patch) · [id]/publish · [id]/wishes
+      gifts/intent/         create · [id] (status) · [id]/submit
       wishes/[id]/          patch · delete
+      dev/mock-verify       dev-only simulated verification
       upload · uploads/[file]
-  components/               BirthdayCard · Countdown · ShareControls · GiftCta · create/*
+  components/               BirthdayCard · Countdown · ShareControls · public/* · create/*
   lib/
+    money.ts                   NIM ⇄ Luna, integer-only (never floats)
+    gifts/verification.ts      ← pure transaction-verification rules
+    gifts/credit.ts            atomic, idempotent credit + reversal
+    gifts/process.ts           verify → credit → status transitions
+    gifts/intent.ts            payment intents (recipient derived server-side)
+    gifts/shortId.ts           compact "nimday:<id>" memo
+    nimiq/client.ts            @nimiq/core light client (worker only)
+    nimiq/txResult.ts          ← the one place that parses sendBasicTransactionWithData()
     nimiq/verifySignature.ts   ← the one place that knows sign()'s byte encoding
-    nimiq/challenge.ts         SIWN message + pure verifier
-    nimiq/deepLink.ts          createNimiqPayDeepLink()
+    nimiq/deepLink.ts          ← the one place that builds Nimiq Pay deep links
     nimiq/provider.ts          client wallet wrapper (typed errors)
     auth/                      jose session cookie · nonce store · currentUser
     birthday.ts                DTOs, ownership guards, publish rules
     storage/                   image storage abstraction (local driver)
+worker/index.ts                always-on verification worker
 prisma/schema.prisma           User · Birthday · Wish · AuthNonce
+                               PaymentIntent · Gift · ProcessedTransaction · WorkerCheckpoint
 ```
 
 ## Security notes

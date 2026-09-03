@@ -1,5 +1,6 @@
-// NIMday — Phase 1 schema (Creator flow + public birthday page).
-// Payment/Gift/Message models are intentionally NOT here yet — Phase 2.
+// NIMday schema.
+//   Phase 1 — creator flow + public page (User / Birthday / Wish / AuthNonce)
+//   Phase 2 — NIM gifting + verification (PaymentIntent / Gift / ProcessedTransaction / WorkerCheckpoint)
 
 generator client {
   provider = "prisma-client-js"
@@ -12,13 +13,27 @@ datasource db {
 
 enum Currency {
   NIM
-  USDT // reserved for Phase 2 — never selectable in the Phase 1 UI
+  USDT // reserved — never selectable, always rejected server-side (MVP is NIM-only)
 }
 
 enum GiftType {
   FUND // "Fund this gift" — contribute toward the target
   BUY // "Buy this gift" — creator wants the actual item
   EITHER // creator is happy with either
+}
+
+enum PaymentIntentStatus {
+  CREATED // intent recorded, nothing sent yet
+  SUBMITTED // giver reported a tx hash; awaiting inclusion
+  PENDING // tx seen on-chain, not yet confirmed
+  CONFIRMED // verified + credited
+  FAILED // verification failed, or a credited tx was later invalidated
+  EXPIRED // intent lapsed with no confirmed payment
+}
+
+enum GiftStatus {
+  CONFIRMED
+  REVERSED // the backing transaction was invalidated after crediting
 }
 
 model User {
@@ -30,37 +45,44 @@ model User {
 }
 
 model Birthday {
-  id          String    @id @default(cuid())
-  creator     User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
-  creatorId   String    @unique // Phase 1: one NIMday per wallet
-  slug        String    @unique
-  name        String
-  birthday    DateTime  @db.Date // birthday date; countdown uses month/day
-  message     String?
-  imageUrl    String?
-  theme       String    @default("confetti") // validated against src/lib/themes.ts
-  published   Boolean   @default(false)
-  publishedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  wishes      Wish[]
+  id             String          @id @default(cuid())
+  creator        User            @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId      String          @unique // Phase 1: one NIMday per wallet
+  slug           String          @unique
+  name           String
+  birthday       DateTime        @db.Date // birthday date; countdown uses month/day
+  message        String?
+  imageUrl       String?
+  theme          String          @default("confetti")
+  published      Boolean         @default(false)
+  publishedAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  wishes         Wish[]
+  paymentIntents PaymentIntent[]
+  gifts          Gift[]
 
   @@index([published])
 }
 
 model Wish {
-  id           String   @id @default(cuid())
-  birthday     Birthday @relation(fields: [birthdayId], references: [id], onDelete: Cascade)
-  birthdayId   String
-  title        String
-  imageUrl     String?
-  description  String?
-  targetAmount Decimal  @db.Decimal(18, 5) // NIM has 5 decimal places
-  currency     Currency @default(NIM)
-  giftType     GiftType @default(EITHER)
-  sortOrder    Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String          @id @default(cuid())
+  birthday       Birthday        @relation(fields: [birthdayId], references: [id], onDelete: Cascade)
+  birthdayId     String
+  title          String
+  imageUrl       String?
+  description    String?
+  targetAmount   Decimal         @db.Decimal(18, 5) // NIM, 5 dp
+  currency       Currency        @default(NIM)
+  giftType       GiftType        @default(EITHER)
+  sortOrder      Int             @default(0)
+  /// Cache of verified contributions, in Luna (1 NIM = 100_000). Source of truth
+  /// is SUM(Gift.amountLuna WHERE status = CONFIRMED); updated inside the credit txn.
+  raisedLuna     BigInt          @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  paymentIntents PaymentIntent[]
+  gifts          Gift[]
 
   @@index([birthdayId])
 }
@@ -69,10 +91,87 @@ model Wish {
 model AuthNonce {
   id        String    @id @default(cuid())
   value     String    @unique
-  address   String // address that requested the challenge
+  address   String
   createdAt DateTime  @default(now())
   expiresAt DateTime
   usedAt    DateTime?
 
   @@index([expiresAt])
+}
+
+/// A visitor's intent to gift, created before any money moves. The recipient
+/// address is always derived server-side from the wish's birthday's creator.
+model PaymentIntent {
+  id               String              @id @default(cuid())
+  birthday         Birthday            @relation(fields: [birthdayId], references: [id], onDelete: Cascade)
+  birthdayId       String
+  wish             Wish                @relation(fields: [wishId], references: [id], onDelete: Cascade)
+  wishId           String
+  recipientAddress String // = birthday.creator.walletAddress at intent time
+  currency         Currency            @default(NIM)
+  /// Amount the giver chose, in Luna.
+  expectedAmountLuna BigInt
+  /// Minimum acceptable, in Luna (defaults to expected). A tx below this fails.
+  minAmountLuna    BigInt
+  /// Compact on-chain identifier: memo = "nimday:<shortId>".
+  shortId          String              @unique
+  memo             String
+  anonymous        Boolean             @default(false)
+  /// Sender address if the giver connected a wallet before paying (claim; verified).
+  senderAddress    String?
+  txHash           String?
+  status           PaymentIntentStatus @default(CREATED)
+  failureReason    String? // machine reason when status = FAILED (see verification.ts)
+  expiresAt        DateTime
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  gift             Gift?
+
+  @@index([status])
+  @@index([birthdayId])
+  @@index([txHash])
+}
+
+/// A verified, credited gift. One row per successfully verified transaction.
+model Gift {
+  id               String        @id @default(cuid())
+  paymentIntent    PaymentIntent @relation(fields: [paymentIntentId], references: [id], onDelete: Cascade)
+  paymentIntentId  String        @unique
+  birthday         Birthday      @relation(fields: [birthdayId], references: [id], onDelete: Cascade)
+  birthdayId       String
+  wish             Wish          @relation(fields: [wishId], references: [id], onDelete: Cascade)
+  wishId           String
+  senderAddress    String // the real on-chain sender (stored even when anonymous)
+  recipientAddress String
+  amountLuna       BigInt // actual verified amount
+  currency         Currency      @default(NIM)
+  txHash           String        @unique // hard idempotency guard
+  shortId          String
+  anonymous        Boolean       @default(false)
+  status           GiftStatus    @default(CONFIRMED)
+  confirmedAt      DateTime
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([birthdayId])
+  @@index([wishId])
+}
+
+/// Ledger of every transaction hash the worker has acted on — the second,
+/// independent double-credit guard alongside Gift.txHash.
+model ProcessedTransaction {
+  txHash          String    @id
+  chain           String    @default("nimiq")
+  paymentIntentId String?
+  giftId          String?
+  creditedAt      DateTime  @default(now())
+  reversedAt      DateTime?
+}
+
+/// Single-row bookmark for the reconciliation sweep.
+model WorkerCheckpoint {
+  id            String   @id @default("singleton")
+  lastScannedAt DateTime @default(now())
+  lastNote      String?
+  updatedAt     DateTime @updatedAt
 }

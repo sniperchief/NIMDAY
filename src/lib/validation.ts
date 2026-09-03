@@ -81,3 +81,30 @@ export const verifyRequestSchema = z.object({
   signature: z.string().regex(/^[0-9a-fA-F]{128}$/, "Bad signature"),
   address: z.string().trim().min(4).max(60),
 });
+
+/* ---- Phase 2: gifting ---- */
+
+const nimAddress = z.string().trim().min(4).max(60);
+
+export const createIntentSchema = z.object({
+  slug: z.string().trim().min(1).max(80),
+  wishId: z.string().trim().min(1).max(40),
+  amountNim: z
+    .string()
+    .trim()
+    .min(1, "Enter an amount")
+    .max(24)
+    .regex(/^\d+(\.\d+)?$/, "Enter a valid NIM amount"),
+  anonymous: z.boolean().default(false),
+  senderAddress: nimAddress.optional(),
+});
+export type CreateIntentRequest = z.infer<typeof createIntentSchema>;
+
+export const submitTxSchema = z.object({
+  txHash: z
+    .string()
+    .trim()
+    .regex(/^(0x)?[0-9a-fA-F]{64}$/, "That doesn't look like a transaction hash")
+    .transform((h) => h.replace(/^0x/i, "").toLowerCase()),
+  senderAddress: nimAddress.optional(),
+});
