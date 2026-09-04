@@ -4,8 +4,17 @@ import type { EditorBirthday } from "@/lib/birthday";
 import type { WishInput } from "@/lib/validation";
 import type { PaymentIntentView, PaymentStatusView } from "@/lib/gifts/intent";
 import type { GiftActivity } from "@/lib/gifts/activity";
+import type { PublicMessage } from "@/lib/messages/store";
+import type { CreatorDashboard } from "@/lib/dashboard";
 
-export type { EditorBirthday, PaymentIntentView, PaymentStatusView, GiftActivity };
+export type {
+  EditorBirthday,
+  PaymentIntentView,
+  PaymentStatusView,
+  GiftActivity,
+  PublicMessage,
+  CreatorDashboard,
+};
 
 export interface ApiIssue {
   path: string;
@@ -190,6 +199,41 @@ export const submitGiftTransaction = (
 export const getMyGiftActivity = () =>
   api<{ activity: GiftActivity }>("/api/birthdays/me/gifts")
     .then((d) => d.activity)
+    .catch((err) => {
+      if (err instanceof ApiError && err.status === 401) return null;
+      throw err;
+    });
+
+/* ---- messages (Phase 3) ---- */
+export const getMessages = (slug: string) =>
+  api<{ messages: PublicMessage[]; total: number }>(
+    `/api/messages?slug=${encodeURIComponent(slug)}`,
+  );
+
+export const postMessage = (input: {
+  slug: string;
+  body: string;
+  senderName?: string;
+  anonymous: boolean;
+  senderAddress?: string;
+  intentId?: string;
+}) =>
+  api<{ message: PublicMessage }>("/api/messages", {
+    method: "POST",
+    body: JSON.stringify(input),
+  }).then((d) => d.message);
+
+/** Remove a message from your own NIMday. Creator-only, enforced server-side. */
+export const deleteMessage = (id: string) =>
+  api<{ deleted: { id: string } }>(`/api/messages/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  }).then((d) => d.deleted);
+
+/* ---- creator dashboard (Phase 3) ---- */
+/** Null when signed out or there's no NIMday yet — both mean "nothing to show". */
+export const getDashboard = () =>
+  api<{ dashboard: CreatorDashboard | null }>("/api/birthdays/me/dashboard")
+    .then((d) => d.dashboard)
     .catch((err) => {
       if (err instanceof ApiError && err.status === 401) return null;
       throw err;

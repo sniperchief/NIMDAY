@@ -9,6 +9,10 @@ export interface DraftWish {
   imageUrl: string;
   targetAmount: string; // kept as string for the input
   giftType: "FUND" | "BUY" | "EITHER";
+  /** gifts already received against this wish — it can't be removed if > 0 */
+  giftCount?: number;
+  /** verified contributions so far, for the "already received" note */
+  raisedNim?: string;
 }
 
 export interface Draft {

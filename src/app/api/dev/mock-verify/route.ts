@@ -4,7 +4,11 @@ import { z } from "zod";
 import { env } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { applyTransactionToIntent } from "@/lib/gifts/process";
-import type { PlainTxDetails, TxState } from "@/lib/gifts/verification";
+import {
+  EXPECTED_NETWORK,
+  type PlainTxDetails,
+  type TxState,
+} from "@/lib/gifts/verification";
 
 /**
  * DEV ONLY — simulates the verification worker seeing a transaction, so the full
@@ -54,7 +58,8 @@ export const POST = route(async (req) => {
       "NQ55 MOCK SEND ER00 0000 0000 0000 0000 0001",
     recipient: body.recipient ?? intent.recipientAddress,
     value: Number(body.valueLuna ?? intent.expectedAmountLuna.toString()),
-    network: body.network ?? "mainalbatross",
+    // Follow the configured network, so this still works on testnet.
+    network: body.network ?? EXPECTED_NETWORK,
     data: { type: "raw", raw: Buffer.from(memo, "utf8").toString("hex") },
   };
 

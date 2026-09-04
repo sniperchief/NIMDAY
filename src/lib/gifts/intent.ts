@@ -35,6 +35,8 @@ export interface PaymentIntentView {
   wishId: string;
   wishTitle: string;
   deepLink: string;
+  /** true when NIMday is pointed at test NIM — the UI says so, loudly */
+  testnet: boolean;
 }
 
 export interface PaymentStatusView {
@@ -50,6 +52,8 @@ export interface PaymentStatusView {
   txHash: string | null;
   failureReason: string | null;
   confirmedGift: { amountNim: string; confirmedAt: string } | null;
+  /** true when NIMday is pointed at test NIM — the UI says so, loudly */
+  testnet: boolean;
   /** present only while the intent is still payable — the data needed to send */
   payContext: {
     recipientAddress: string;
@@ -138,6 +142,7 @@ export async function createPaymentIntent(
     wishId: wish.id,
     wishTitle: wish.title,
     deepLink: giftDeepLink(env.appOrigin, birthday.slug, { intentId: intent.id }),
+    testnet: env.isTestnet(),
   };
 }
 
@@ -175,6 +180,7 @@ export async function getPaymentStatus(
             confirmedAt: intent.gift.confirmedAt.toISOString(),
           }
         : null,
+    testnet: env.isTestnet(),
     payContext: payable
       ? {
           recipientAddress: intent.recipientAddress,

@@ -80,11 +80,39 @@ npm run dev:gift 5 anon
 Then refresh the public page — the progress bar moves, and at target it flips to
 **🎉 Wish fulfilled!**
 
-### 7. Check the creator dashboard
+### 7. Leave a birthday message
 
-Go back to **/create**. Under your published NIMday there's a **Gifts** panel:
-gift count, total NIM, and one row per gift. Anonymous ones read *"Someone gifted…"*
-with no address; named ones show a masked `NQ55…0001`.
+On the public page, scroll to **"Leave a birthday message"**. No wallet, no account.
+Try all four: a named message, one with the name left blank (shows as *"A friend"*),
+one with **Send anonymously** ticked (shows as *"Someone"*), and one containing a link
+(rejected — links aren't allowed). Send the same message twice and the second is
+refused; send six in a row and you get a friendly rate-limit message.
+
+The **Birthday Quest** strip sits under the wishes. Tap it to expand: visiting already
+ticked step 1, sending a message ticks step 2, opening a wish ticks step 3, and
+**Celebrate your friend** fires confetti for step 4. Progress is stored per-device in
+`localStorage` — nothing about the quest is on the server.
+
+### 8. Check the creator dashboard
+
+Go to **/dashboard** (also linked from the home page and after publishing). You get:
+countdown, published status, the share block with copy + Web Share, gift totals,
+per-wish progress, and an activity feed mixing gifts, messages and fulfilled wishes.
+Anonymous gifts read *"Someone gifted…"* with no address; named ones show a masked
+`NQ55…0001`.
+
+### 9. Run the scripted end-to-end pass (optional)
+
+With the dev server running and a **freshly reset** database:
+
+```
+npx prisma db push --force-reset
+npm run e2e:phase3
+```
+
+35 checks covering the creator flow, the public page, messages, validation, rate
+limiting, the gifting regression, the dashboard and authorization. It signs in with
+the dev wallet, so the database must not already hold a NIMday for it.
 
 ### What to look for
 

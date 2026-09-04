@@ -25,10 +25,19 @@ const config: Config = {
           "0%": { opacity: "0", transform: "scale(0.96)" },
           "100%": { opacity: "1", transform: "scale(1)" },
         },
+        confetti: {
+          "0%": { opacity: "0", transform: "translateY(-10vh) rotate(0deg)" },
+          "10%": { opacity: "1" },
+          "100%": {
+            opacity: "0",
+            transform: "translateY(105vh) rotate(540deg)",
+          },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out both",
         "pop-in": "pop-in 0.35s ease-out both",
+        confetti: "confetti 2s ease-in forwards",
       },
     },
   },

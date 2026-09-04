@@ -51,6 +51,7 @@ with a deterministic keypair (never enabled in production).
 | `npm run dev` / `build` / `start` | Next.js |
 | `npm run worker` | verification worker (`@nimiq/core` light client) |
 | `npm test` | Vitest (unit + route-level flow tests). DB integration tests run when `DATABASE_URL` is set; `RUN_MAINNET_TESTS=1` adds a live Nimiq mainnet check. |
+| `npm run e2e:phase3` | Scripted end-to-end pass over HTTP against a running dev server (needs `ALLOW_DEV_LOGIN=1` and a reset database). |
 | `npm run typecheck` · `npm run lint` | `tsc --noEmit` · `next lint` |
 | `npm run db:dev` | in-process PGlite Postgres over a socket (dev only) |
 | `npm run db:push` · `db:seed` | Prisma schema sync · demo data |
@@ -62,17 +63,29 @@ src/
   app/
     page.tsx                landing
     create/                 creator wizard (details → wishes → connect → preview → publish)
+    dashboard/              "My NIMday" — overview, gift summary, activity (SSR, session-scoped)
     b/[slug]/               public birthday page (SSR) + opengraph-image + not-found
     api/
       auth/                 nonce · verify · me · logout · dev-login
-      birthdays/            create · me · me/gifts · [id] (patch) · [id]/publish · [id]/wishes
+      birthdays/            create · me · me/gifts · me/dashboard · [id] (patch) · [id]/publish · [id]/wishes
       gifts/intent/         create · [id] (status) · [id]/submit
+      messages/             list (?slug=) · create — public, no wallet required
       wishes/[id]/          patch · delete
       dev/mock-verify       dev-only simulated verification
       upload · uploads/[file]
-  components/               BirthdayCard · Countdown · ShareControls · public/* · create/*
+  components/               BirthdayCard · WishList · Countdown · ShareControls
+                            public/* (GiftFlow · MessageBoard · BirthdayQuest · Confetti)
+                            create/* · dashboard/*
   lib/
     money.ts                   NIM ⇄ Luna, integer-only (never floats)
+    messages/text.ts           ← pure message rules (length, links, attribution)
+    messages/store.ts          message reads/writes + the anonymity rules
+    quest.ts                   Birthday Quest — derived, per-device, no table
+    share.ts                   ← the one place that builds the public /b/<slug> URL
+    dashboard.ts               creator dashboard, built from the verified gift ledger
+    activityText.ts            activity-feed copy (pure)
+    rateLimit.ts               in-process limiter for the public message endpoint
+    gifts/failureCopy.ts       human copy for every verification outcome
     gifts/verification.ts      ← pure transaction-verification rules
     gifts/credit.ts            atomic, idempotent credit + reversal
     gifts/process.ts           verify → credit → status transitions

@@ -9,6 +9,16 @@ import { newWish, type Draft, type DraftWish } from "./types";
 
 const GIFT_TYPES: DraftWish["giftType"][] = ["FUND", "BUY", "EITHER"];
 
+/**
+ * A wish that has already received a gift can't be deleted — the server
+ * refuses it, because `Gift` rows cascade from `Wish` and the gift ledger is
+ * the authoritative record of money that really moved. Reflected here so the
+ * creator sees why, rather than hitting the refusal at publish time.
+ */
+function gifted(w: DraftWish): boolean {
+  return (w.giftCount ?? 0) > 0;
+}
+
 function WishForm({
   wish,
   onSave,
@@ -189,6 +199,11 @@ export function WishesStep({
                 <p className="text-xs text-ink/50">
                   {w.targetAmount || "0"} NIM · {GIFT_TYPE_LABEL[w.giftType]}
                 </p>
+                {gifted(w) ? (
+                  <p className="mt-0.5 text-xs font-medium text-emerald-700">
+                    🎁 {w.raisedNim ?? "0"} NIM received — can&apos;t be removed
+                  </p>
+                ) : null}
               </div>
               <Button
                 type="button"
@@ -197,7 +212,17 @@ export function WishesStep({
               >
                 Edit
               </Button>
-              <Button type="button" variant="ghost" onClick={() => remove(w.key)}>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={gifted(w)}
+                title={
+                  gifted(w)
+                    ? "This wish has already received a gift"
+                    : undefined
+                }
+                onClick={() => remove(w.key)}
+              >
                 Remove
               </Button>
             </li>

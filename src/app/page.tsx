@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BirthdayCard } from "@/components/BirthdayCard";
+import { WishList } from "@/components/WishList";
 
 const SAMPLE = {
   name: "Sarah",
@@ -7,27 +8,28 @@ const SAMPLE = {
   message: "Turning a year wiser — thank you for celebrating with me! ❤️",
   theme: "confetti",
   imageUrl: null,
-  wishes: [
-    {
-      id: "s1",
-      title: "New headphones",
-      description: "The over-ear ones I keep talking about",
-      imageUrl: null,
-      targetNim: "120",
-      currency: "NIM" as const,
-      giftType: "FUND" as const,
-    },
-    {
-      id: "s2",
-      title: "Pottery class",
-      description: null,
-      imageUrl: null,
-      targetNim: "60",
-      currency: "NIM" as const,
-      giftType: "EITHER" as const,
-    },
-  ],
 };
+
+const SAMPLE_WISHES = [
+  {
+    id: "s1",
+    title: "New headphones",
+    description: "The over-ear ones I keep talking about",
+    imageUrl: null,
+    targetNim: "120",
+    currency: "NIM" as const,
+    giftType: "FUND" as const,
+  },
+  {
+    id: "s2",
+    title: "Pottery class",
+    description: null,
+    imageUrl: null,
+    targetNim: "60",
+    currency: "NIM" as const,
+    giftType: "EITHER" as const,
+  },
+];
 
 function nextMonthISO() {
   const d = new Date();
@@ -70,6 +72,12 @@ export default function Home() {
             >
               How it works
             </a>
+            <Link
+              href="/dashboard"
+              className="rounded-full px-4 py-3.5 text-base font-medium text-ink/60 transition hover:text-ink"
+            >
+              My NIMday
+            </Link>
           </div>
           <p className="mt-4 text-xs text-ink/40">
             Takes about a minute. NIMday never holds your money.
@@ -77,7 +85,9 @@ export default function Home() {
         </div>
 
         <div className="mx-auto w-full max-w-sm animate-pop-in">
-          <BirthdayCard data={SAMPLE} />
+          <BirthdayCard data={SAMPLE} compact>
+            <WishList wishes={SAMPLE_WISHES} theme={SAMPLE.theme} />
+          </BirthdayCard>
         </div>
       </section>
 

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { env } from "@/lib/env";
 
@@ -14,6 +14,17 @@ export const metadata: Metadata = {
     siteName: "NIMday",
     type: "website",
   },
+};
+
+/**
+ * Mobile-first: the page must scale with the device, and stay zoomable — a
+ * birthday card someone can't pinch to read is a broken birthday card.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#fbf7f0",
 };
 
 export default function RootLayout({

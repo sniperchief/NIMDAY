@@ -7,7 +7,14 @@ import { formatBirthdayDate } from "@/lib/validation";
 import { getTheme } from "@/lib/themes";
 import { LUNA_PER_NIM, lunaToNimString } from "@/lib/money";
 
-export type BirthdayWithWishes = Birthday & { wishes: Wish[] };
+/** A wish row, optionally carrying its gift count (loaded for editor views). */
+export type WishWithCounts = Wish & { _count?: { gifts: number } };
+export type BirthdayWithWishes = Birthday & { wishes: WishWithCounts[] };
+
+/** Include shape for the creator editor — it needs to know which wishes are gifted. */
+const EDITOR_INCLUDE = {
+  wishes: { include: { _count: { select: { gifts: true } } } },
+} as const;
 
 export interface EditorWish {
   id: string;
@@ -18,6 +25,10 @@ export interface EditorWish {
   currency: "NIM" | "USDT";
   giftType: "FUND" | "BUY" | "EITHER";
   sortOrder: number;
+  /** verified contributions so far, e.g. "45.5" — display only */
+  raisedNim: string;
+  /** gifts recorded against this wish; > 0 means it can no longer be deleted */
+  giftCount: number;
 }
 
 export interface EditorBirthday {
@@ -90,7 +101,7 @@ function wishToPublic(w: Wish): PublicWish {
   };
 }
 
-function wishToEditor(w: Wish): EditorWish {
+function wishToEditor(w: WishWithCounts): EditorWish {
   return {
     id: w.id,
     title: w.title,
@@ -100,6 +111,8 @@ function wishToEditor(w: Wish): EditorWish {
     currency: w.currency,
     giftType: w.giftType,
     sortOrder: w.sortOrder,
+    raisedNim: lunaToNimString(BigInt(w.raisedLuna ?? 0)),
+    giftCount: w._count?.gifts ?? 0,
   };
 }
 
@@ -149,7 +162,7 @@ export async function getOwnBirthday(
 ): Promise<BirthdayWithWishes | null> {
   return prisma.birthday.findUnique({
     where: { creatorId: userId },
-    include: { wishes: true },
+    include: EDITOR_INCLUDE,
   });
 }
 
@@ -174,7 +187,7 @@ export async function requireOwnedBirthday(
 ): Promise<BirthdayWithWishes> {
   const b = await prisma.birthday.findUnique({
     where: { id: birthdayId },
-    include: { wishes: true },
+    include: EDITOR_INCLUDE,
   });
   if (!b) throw notFound("That NIMday doesn't exist");
   if (b.creatorId !== userId) throw forbidden();
@@ -198,7 +211,7 @@ export async function requireOwnedWish(
 export async function reloadEditor(birthdayId: string): Promise<EditorBirthday> {
   const b = await prisma.birthday.findUniqueOrThrow({
     where: { id: birthdayId },
-    include: { wishes: true },
+    include: EDITOR_INCLUDE,
   });
   return toEditorBirthday(b);
 }

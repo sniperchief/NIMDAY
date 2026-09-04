@@ -21,6 +21,8 @@ export function draftFromEditor(b: EditorBirthday): Draft {
       imageUrl: w.imageUrl ?? "",
       targetAmount: String(Number(w.targetAmount)),
       giftType: w.giftType,
+      giftCount: w.giftCount,
+      raisedNim: w.raisedNim,
     })),
   };
 }

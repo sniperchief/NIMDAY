@@ -11,6 +11,7 @@ import {
   friendlyWalletMessage,
   WalletError,
 } from "@/lib/nimiq/provider";
+import { giftFailureMessage } from "@/lib/gifts/failureCopy";
 import {
   ApiError,
   createGiftIntent,
@@ -19,6 +20,21 @@ import {
   type PaymentIntentView,
   type PaymentStatusView,
 } from "@/lib/apiClient";
+
+/**
+ * Shown only when NIMday is pointed at a test network. On mainnet nothing
+ * renders, so the gift flow stays free of chain talk — but a demo on testnet
+ * can never be mistaken for real money moving.
+ */
+function TestnetNotice({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900 ring-1 ring-amber-200">
+      <span className="font-semibold">Test network.</span> This NIMday is running
+      on Nimiq testnet — the NIM sent here is test NIM and has no value.
+    </p>
+  );
+}
 
 type Step =
   | "amount"
@@ -30,40 +46,35 @@ type Step =
   | "confirmed"
   | "failed";
 
-const FAILURE_COPY: Record<string, string> = {
-  wrong_recipient: "That payment didn't reach the birthday person's wallet.",
-  wrong_sender: "The payment came from a different wallet than expected.",
-  wrong_memo: "We couldn't match that payment to this gift.",
-  wrong_network: "That payment wasn't on the Nimiq mainnet.",
-  wrong_currency: "Only NIM gifts are supported right now.",
-  amount_too_low: "The amount received was less than the gift amount.",
-  invalidated: "That transaction was rolled back by the network.",
-  not_creditable: "That transaction can't be counted.",
-  expired: "This gift request expired before the payment arrived.",
-};
-
-function reasonCopy(reason: string | null): string {
-  if (!reason) return "We couldn't verify that payment. No gift was recorded.";
-  return FAILURE_COPY[reason] ?? "We couldn't verify that payment.";
-}
-
 export function GiftFlow({
   slug,
   birthdayName,
   wishes,
+  testnet,
   open,
   initialWishId,
   resumeIntentId,
   onClose,
+  onWishChosen,
+  onGiftConfirmed,
+  onLeaveMessage,
 }: {
   slug: string;
   origin: string;
   birthdayName: string;
   wishes: PublicWish[];
+  /** NIMday is pointed at a test network — never hide that from a giver */
+  testnet: boolean;
   open: boolean;
   initialWishId: string | null;
   resumeIntentId: string | null;
   onClose: () => void;
+  /** the visitor picked a wish and started a gift */
+  onWishChosen?: (wishId: string) => void;
+  /** a gift was verified and credited — carries the intent id */
+  onGiftConfirmed?: (intentId: string) => void;
+  /** they want to write a birthday message next */
+  onLeaveMessage?: () => void;
 }) {
   const [step, setStep] = useState<Step>("amount");
   const [wishId, setWishId] = useState<string | null>(initialWishId);
@@ -77,7 +88,9 @@ export function GiftFlow({
   const [status, setStatus] = useState<PaymentStatusView | null>(null);
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
 
+  const panelRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const notifiedRef = useRef<string | null>(null);
   const wish = useMemo(
     () => wishes.find((w) => w.id === wishId) ?? null,
     [wishes, wishId],
@@ -145,6 +158,7 @@ export function GiftFlow({
             wishId: s.wishId,
             wishTitle: s.wishTitle,
             deepLink: "",
+            testnet: s.testnet,
           });
           setStep(inNimiqPay ? "connect" : "handoff");
         }
@@ -183,13 +197,42 @@ export function GiftFlow({
     return stopPolling;
   }, [open, stopPolling, resumeIntentId]);
 
+  // Escape closes — except while a payment is in flight, matching the backdrop.
+  // Losing the dialog mid-send would leave the giver with no idea what happened
+  // to their NIM.
+  const locked = step === "sending" || step === "verifying";
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && !locked) onClose();
     }
     if (open) window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open, onClose, locked]);
+
+  // Hold the page still behind the dialog, and put focus inside it so a
+  // keyboard or screen-reader user lands on the gift, not the page underneath.
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const returnFocus = document.activeElement as HTMLElement | null;
+    panelRef.current?.focus();
+    return () => {
+      document.body.style.overflow = previous;
+      returnFocus?.focus?.();
+    };
+  }, [open]);
+
+  // Tell the page exactly once when a gift is confirmed, whichever route got
+  // us here (fresh send, resumed deep link, or a poll that caught up).
+  useEffect(() => {
+    if (step !== "confirmed") return;
+    const id = intent?.id ?? status?.id ?? resumeIntentId ?? null;
+    if (id && notifiedRef.current !== id) {
+      notifiedRef.current = id;
+      onGiftConfirmed?.(id);
+    }
+  }, [step, intent, status, resumeIntentId, onGiftConfirmed]);
 
   if (!open) return null;
 
@@ -216,6 +259,7 @@ export function GiftFlow({
         anonymous,
       });
       setIntent(created);
+      onWishChosen?.(wish.id);
       setStep(inNimiqPay ? "connect" : "handoff");
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Couldn't start the gift. Try again.");
@@ -271,19 +315,25 @@ export function GiftFlow({
     }
   }
 
+  const onTestnet = testnet || intent?.testnet || status?.testnet || false;
   const amountNim = intent?.amountNim ?? status?.amountNim ?? amount;
   const wishTitle = wish?.title ?? intent?.wishTitle ?? status?.wishTitle ?? "this wish";
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-3 sm:items-center"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Send a gift to ${birthdayName}`}
+      onClick={() => {
+        // Never yank the dialog away while a payment is in flight.
+        if (!locked) onClose();
+      }}
     >
       <div
-        className="w-full max-w-sm animate-pop-in rounded-3xl bg-white p-5 text-ink shadow-xl"
+        ref={panelRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Send a gift to ${birthdayName}`}
+        className="max-h-[88dvh] w-full max-w-sm animate-pop-in overflow-y-auto rounded-3xl bg-white p-5 text-ink shadow-xl outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ---------- amount ---------- */}
@@ -332,7 +382,9 @@ export function GiftFlow({
                 <span className="text-sm font-medium text-ink/60">NIM</span>
               </div>
               {amountError ? (
-                <span className="mt-1 block text-xs text-red-600">{amountError}</span>
+                <span role="alert" className="mt-1 block text-xs text-red-600">
+                  {amountError}
+                </span>
               ) : wish?.raisedNim !== undefined ? (
                 <span className="mt-1 block text-xs text-ink/45">
                   {wish.fulfilled
@@ -353,7 +405,13 @@ export function GiftFlow({
               <span className="text-xs text-ink/40">(hidden in NIMday, not on-chain)</span>
             </label>
 
-            {error ? <p className="text-xs text-red-600">{error}</p> : null}
+            <TestnetNotice show={onTestnet} />
+
+            {error ? (
+              <p role="alert" className="text-xs text-red-600">
+                {error}
+              </p>
+            ) : null}
 
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={onClose}>
@@ -379,6 +437,7 @@ export function GiftFlow({
                 is ready. Finish it in the Nimiq Pay app.
               </p>
             </div>
+            <TestnetNotice show={onTestnet} />
             <a
               href={intent.deepLink}
               className="block rounded-full bg-ink px-5 py-3 text-sm font-medium text-cream"
@@ -402,7 +461,9 @@ export function GiftFlow({
               Sending {intent.amountNim} NIM to {birthdayName} for “{intent.wishTitle}”.
             </p>
             {error ? (
-              <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+              <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </p>
             ) : null}
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={onClose}>
@@ -445,11 +506,14 @@ export function GiftFlow({
                 </div>
               ) : null}
             </dl>
+            <TestnetNotice show={onTestnet} />
             <p className="text-xs text-ink/45">
               Nimiq Pay will ask you to approve. Nothing leaves your wallet until you do.
             </p>
             {error ? (
-              <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+              <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
+                {error}
+              </p>
             ) : null}
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={onClose}>
@@ -462,8 +526,11 @@ export function GiftFlow({
 
         {/* ---------- sending / verifying ---------- */}
         {(step === "sending" || step === "verifying") && (
-          <div className="space-y-3 py-4 text-center">
-            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-ink/20 border-t-ink" />
+          <div className="space-y-3 py-4 text-center" role="status" aria-live="polite">
+            <div
+              aria-hidden
+              className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-ink/20 border-t-ink"
+            />
             <p className="text-sm font-medium">
               {step === "sending"
                 ? "Waiting for you to approve in Nimiq Pay…"
@@ -477,8 +544,11 @@ export function GiftFlow({
 
         {/* ---------- confirmed ---------- */}
         {step === "confirmed" && (
-          <div className="space-y-4 py-2 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-3xl">
+          <div className="space-y-4 py-2 text-center" role="status" aria-live="polite">
+            <div
+              aria-hidden
+              className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-3xl"
+            >
               🎁
             </div>
             <div>
@@ -490,15 +560,25 @@ export function GiftFlow({
               </p>
             </div>
             <div className="flex flex-col gap-2">
-              <Button onClick={onClose}>Back to the card</Button>
+              {onLeaveMessage ? (
+                <Button size="lg" onClick={onLeaveMessage}>
+                  Leave a birthday message 💌
+                </Button>
+              ) : null}
+              <Button variant={onLeaveMessage ? "secondary" : "primary"} onClick={onClose}>
+                Back to the card
+              </Button>
             </div>
           </div>
         )}
 
         {/* ---------- failed ---------- */}
         {step === "failed" && (
-          <div className="space-y-4 py-2 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-2xl">
+          <div className="space-y-4 py-2 text-center" role="alert">
+            <div
+              aria-hidden
+              className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-2xl"
+            >
               ⚠️
             </div>
             <div>
@@ -508,7 +588,7 @@ export function GiftFlow({
               <p className="mt-1 text-sm text-ink/65">
                 {status?.status === "EXPIRED"
                   ? "Start again to send your gift."
-                  : reasonCopy(status?.failureReason ?? null)}
+                  : giftFailureMessage(status?.failureReason)}
               </p>
             </div>
             <div className="flex flex-col gap-2">

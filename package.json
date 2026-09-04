@@ -13,6 +13,8 @@
     "test:watch": "vitest",
     "db:dev": "node scripts/dev-db.mjs .pglite",
     "dev:gift": "tsx --tsconfig tsconfig.scripts.json scripts/dev-gift.ts",
+    "e2e:phase3": "node scripts/e2e-phase3.mjs",
+    "check:storage": "node scripts/check-storage.mjs",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "prisma:generate": "prisma generate",

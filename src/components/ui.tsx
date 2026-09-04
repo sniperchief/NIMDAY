@@ -16,7 +16,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref,
   ) {
     const base =
-      "inline-flex items-center justify-center gap-2 rounded-full font-medium transition active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none";
+      "inline-flex items-center justify-center gap-2 rounded-full font-medium transition active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none " +
+      // A visible keyboard focus ring on every button, in both tones.
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white";
     const sizes = { md: "px-5 py-2.5 text-sm", lg: "px-6 py-3.5 text-base" };
     const variants = {
       primary: "bg-ink text-cream hover:bg-ink/90",
@@ -28,6 +30,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={cn(base, sizes[size], variants[variant], className)}
         disabled={disabled || loading}
+        // A disabled button is silent to a screen reader about *why*. aria-busy
+        // says "working", not "unavailable".
+        aria-busy={loading || undefined}
         {...rest}
       >
         {loading && (
@@ -37,6 +42,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           />
         )}
         {children}
+        {loading && <span className="sr-only">, working…</span>}
       </button>
     );
   },

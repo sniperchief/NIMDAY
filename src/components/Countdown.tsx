@@ -28,17 +28,29 @@ export function Countdown({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [birthdayISO]);
 
+  // One centred text run, not a row of flex items. As `inline-flex` the label
+  // and the age were separate items, so on a narrow screen the label wrapped
+  // inside its own box while "· turning 30" stayed pinned alongside it. Laid
+  // out as ordinary inline text it reflows like a sentence and stays centred:
+  //
+  //     🎈 112 days until Sarah's
+  //        birthday · turning 30
+  //
+  // `mr-2` reproduces the old `gap-2` — JSX drops the newline between the emoji
+  // and the label, so there is no extra space to double up with.
   return (
     <span
       className={
-        "inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium " +
+        "inline-block max-w-full rounded-full px-3.5 py-1.5 text-center text-sm font-medium " +
         (className ?? "")
       }
     >
-      <span aria-hidden>{c.isToday ? "🎂" : "🎈"}</span>
+      <span aria-hidden className="mr-2">
+        {c.isToday ? "🎂" : "🎈"}
+      </span>
       {countdownLabel(name, c)}
       {c.turningAge && !c.isToday ? (
-        <span className="opacity-70">· turning {c.turningAge}</span>
+        <span className="opacity-70">{` · turning ${c.turningAge}`}</span>
       ) : null}
     </span>
   );

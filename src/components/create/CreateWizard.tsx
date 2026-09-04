@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Button, Card, cn } from "@/components/ui";
 import { BirthdayCard } from "@/components/BirthdayCard";
-import { ShareControls } from "@/components/ShareControls";
+import { WishList } from "@/components/WishList";
+import { ShareSection } from "@/components/ShareControls";
 import {
   ApiError,
   addWish,
@@ -18,10 +19,10 @@ import {
   type EditorBirthday,
 } from "@/lib/apiClient";
 import type { WishInput } from "@/lib/validation";
+import { prettyUrl } from "@/lib/share";
 import { DetailsStep } from "./DetailsStep";
 import { WishesStep } from "./WishesStep";
 import { ConnectStep } from "./ConnectStep";
-import { GiftActivityPanel } from "./GiftActivityPanel";
 import { useDraft, draftFromEditor } from "./useDraft";
 import type { DraftWish } from "./types";
 
@@ -86,7 +87,13 @@ export function CreateWizard() {
       message: draft.message || null,
       theme: draft.theme,
       imageUrl: draft.imageUrl || null,
-      wishes: draft.wishes.map((w) => ({
+    }),
+    [draft],
+  );
+
+  const previewWishes = useMemo(
+    () =>
+      draft.wishes.map((w) => ({
         id: w.key,
         title: w.title || "Untitled wish",
         description: w.description || null,
@@ -95,8 +102,7 @@ export function CreateWizard() {
         currency: "NIM" as const,
         giftType: w.giftType,
       })),
-    }),
-    [draft],
+    [draft.wishes],
   );
 
   async function reconcileWishes(id: string, server: EditorBirthday["wishes"]) {
@@ -104,7 +110,11 @@ export function CreateWizard() {
       draft.wishes.filter((w) => w.serverId).map((w) => w.serverId),
     );
     for (const s of server) {
-      if (!keptIds.has(s.id)) await deleteWish(s.id);
+      // A gifted wish is never deleted — its Gift rows are the authoritative
+      // record of money that moved, and they cascade from the wish. The server
+      // refuses it too; skipping here means a stale local draft can't turn
+      // "publish" into a failure the creator can't act on.
+      if (!keptIds.has(s.id) && s.giftCount === 0) await deleteWish(s.id);
     }
     for (const w of draft.wishes) {
       const input = toWishInput(w);
@@ -165,7 +175,15 @@ export function CreateWizard() {
       clear();
       setStep("done");
     } catch (err) {
-      if (err instanceof ApiError) {
+      if (err instanceof ApiError && err.status === 401) {
+        // The session lapsed somewhere in the middle. Say so plainly and put
+        // them back on the one step that can fix it — the draft is untouched.
+        setAuthedAddress(null);
+        setPublishError(
+          "Your wallet session expired. Connect again and we'll publish — nothing you typed is lost.",
+        );
+        setStep("connect");
+      } else if (err instanceof ApiError) {
         setPublishError(err.message);
         if (err.problems?.length) setProblems(err.problems);
       } else {
@@ -200,24 +218,31 @@ export function CreateWizard() {
             </p>
           </div>
 
-          <div className="mt-5 break-all rounded-xl bg-black/[0.04] px-3 py-2.5 text-center font-mono text-sm text-ink/80">
-            {publishUrl}
+          <div className="mt-5">
+            <ShareSection
+              url={publishUrl}
+              name={draft.name || birthday?.name || "your"}
+              audience="creator"
+              tone="soft"
+              title="Share it"
+              subtitle="One link. Send it to everyone who'd want to celebrate you."
+            />
           </div>
 
-          <div className="mt-4 flex flex-col items-center gap-3">
-            <ShareControls url={publishUrl} />
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-4">
+            <Link href="/dashboard" className="text-sm font-medium text-ink underline">
+              Open My NIMday →
+            </Link>
             <a
               href={publishUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-sm font-medium text-ink underline"
+              className="text-sm font-medium text-ink/70 underline"
             >
-              Open your NIMday →
+              Preview the public page
             </a>
           </div>
         </Card>
-
-        <GiftActivityPanel />
 
         <div className="text-center">
           <Button
@@ -284,12 +309,25 @@ export function CreateWizard() {
           />
         )}
         {step === "connect" && (
-          <ConnectStep
-            authedAddress={authedAddress}
-            onAuthed={setAuthedAddress}
-            onBack={() => setStep("wishes")}
-            onNext={() => setStep("preview")}
-          />
+          <div className="space-y-4">
+            {publishError ? (
+              <p
+                role="alert"
+                className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900 ring-1 ring-amber-200"
+              >
+                {publishError}
+              </p>
+            ) : null}
+            <ConnectStep
+              authedAddress={authedAddress}
+              onAuthed={(a) => {
+                setAuthedAddress(a);
+                setPublishError(null);
+              }}
+              onBack={() => setStep("wishes")}
+              onNext={() => setStep("preview")}
+            />
+          </div>
         )}
         {step === "preview" && (
           <div className="space-y-5">
@@ -301,7 +339,9 @@ export function CreateWizard() {
             </div>
 
             <div className="rounded-2xl bg-black/[0.03] p-3">
-              <BirthdayCard data={previewData} />
+              <BirthdayCard data={previewData} compact>
+                <WishList wishes={previewWishes} theme={draft.theme} />
+              </BirthdayCard>
             </div>
 
             {!authedAddress && (
@@ -352,18 +392,16 @@ export function CreateWizard() {
       </Card>
 
       {birthday?.published && step !== "done" && publishUrl && (
-        <>
-          <p className="mt-4 text-center text-xs text-ink/50">
-            Your NIMday is already published at{" "}
-            <Link href={publishUrl} className="underline">
-              {publishUrl.replace(/^https?:\/\//, "")}
-            </Link>
-            . Publishing again will update it.
-          </p>
-          <div className="mt-4">
-            <GiftActivityPanel />
-          </div>
-        </>
+        <p className="mt-4 text-center text-xs text-ink/50">
+          Your NIMday is already published at{" "}
+          <Link href={publishUrl} className="underline">
+            {prettyUrl(publishUrl)}
+          </Link>
+          . Publishing again will update it.{" "}
+          <Link href="/dashboard" className="font-medium underline">
+            Open My NIMday
+          </Link>
+        </p>
       )}
     </div>
   );

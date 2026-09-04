@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { THEME_IDS } from "@/lib/themes";
+import {
+  MESSAGE_MAX_LENGTH,
+  SENDER_NAME_MAX_LENGTH,
+} from "@/lib/messages/text";
 
 export const MAX_WISHES = 5;
 
@@ -108,3 +112,26 @@ export const submitTxSchema = z.object({
     .transform((h) => h.replace(/^0x/i, "").toLowerCase()),
   senderAddress: nimAddress.optional(),
 });
+
+/* ---- Phase 3: birthday messages ---- */
+
+/**
+ * Shape-only validation. The real content rules (normalisation, length,
+ * link rejection) live in `messages/text.ts` and run server-side in
+ * `createMessage`, so the API and the composer can never drift apart.
+ */
+export const createMessageSchema = z.object({
+  slug: z.string().trim().min(1).max(80),
+  body: z.string().min(1, "Write a short birthday message first").max(2000),
+  senderName: z.string().max(SENDER_NAME_MAX_LENGTH * 4).optional(),
+  anonymous: z.boolean().default(false),
+  senderAddress: nimAddress.optional(),
+  /** a payment intent the visitor just paid, to link the gift */
+  intentId: z.string().trim().min(1).max(40).optional(),
+});
+export type CreateMessageRequest = z.infer<typeof createMessageSchema>;
+
+export const MESSAGE_LIMITS = {
+  body: MESSAGE_MAX_LENGTH,
+  senderName: SENDER_NAME_MAX_LENGTH,
+} as const;

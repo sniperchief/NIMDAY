@@ -32,16 +32,31 @@ describe.skipIf(!HAS_DB)("birthday persistence", () => {
     return prisma.user.create({ data: { walletAddress: addr } });
   }
 
+  /**
+   * Assert a write is rejected by a database constraint.
+   *
+   * The assertion is the plain one — the write must reject. The `$disconnect`
+   * afterwards is purely a driver accommodation: the bundled PGlite dev
+   * database drops the socket on a constraint violation instead of returning
+   * the error on a live connection, so without this the *next* test's cleanup
+   * fails on a dead connection. Prisma reconnects lazily on the next query, and
+   * on real PostgreSQL this is just an extra reconnect.
+   */
+  async function expectRejectedByConstraint(write: Promise<unknown>) {
+    await expect(write).rejects.toThrow();
+    await prisma.$disconnect();
+  }
+
   it("enforces one NIMday per creator", async () => {
     const u = await makeUser("NQ01 TEST 0000 0000 0000 0000 0000 0000 0001");
     await prisma.birthday.create({
       data: { creatorId: u.id, slug: "a-1", name: "A", birthday: new Date("2000-01-01") },
     });
-    await expect(
+    await expectRejectedByConstraint(
       prisma.birthday.create({
         data: { creatorId: u.id, slug: "a-2", name: "A", birthday: new Date("2000-01-01") },
       }),
-    ).rejects.toThrow();
+    );
   });
 
   it("enforces unique slugs", async () => {
@@ -50,11 +65,11 @@ describe.skipIf(!HAS_DB)("birthday persistence", () => {
     await prisma.birthday.create({
       data: { creatorId: u1.id, slug: "dup", name: "A", birthday: new Date("2000-01-01") },
     });
-    await expect(
+    await expectRejectedByConstraint(
       prisma.birthday.create({
         data: { creatorId: u2.id, slug: "dup", name: "B", birthday: new Date("2000-01-01") },
       }),
-    ).rejects.toThrow();
+    );
   });
 
   it("generateUniqueSlug avoids existing slugs", async () => {

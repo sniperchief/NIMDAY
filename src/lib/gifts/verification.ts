@@ -10,6 +10,7 @@
 
 import { normalizeAddress } from "@/lib/nimiq/address";
 import { shortIdFromMemo } from "@/lib/gifts/shortId";
+import { env, NIMIQ_MAINNET } from "@/lib/env";
 
 export type TxState =
   | "new"
@@ -46,15 +47,16 @@ export interface IntentForVerification {
   senderAddress: string | null;
 }
 
-export const NIMIQ_MAINNET = "mainalbatross";
+export { NIMIQ_MAINNET };
 
 /**
  * The network a transaction must be on to count. Defaults to mainnet; set
  * NIMIQ_NETWORK=testalbatross (and run the worker with the same value) to test
- * end-to-end with free testnet NIM. Read once at import.
+ * end-to-end with free testnet NIM. Read once at import, from the single
+ * validated source in `lib/env` — the light client reads the same one, so the
+ * chain we watch and the chain we accept can never drift apart.
  */
-export const EXPECTED_NETWORK: string =
-  process.env.NIMIQ_NETWORK || NIMIQ_MAINNET;
+export const EXPECTED_NETWORK: string = env.nimiqNetwork();
 
 export type VerificationFailure =
   | "wrong_currency"

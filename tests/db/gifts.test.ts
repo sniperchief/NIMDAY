@@ -91,7 +91,7 @@ describe.skipIf(!HAS_DB)("gifts + verification", () => {
       sender: SENDER,
       recipient: intent.recipientAddress,
       value: Number(intent.expectedAmountLuna),
-      network: verification.NIMIQ_MAINNET,
+      network: verification.EXPECTED_NETWORK,
       data: {
         type: "raw",
         raw: Buffer.from(intent.memo, "utf8").toString("hex"),

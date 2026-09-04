@@ -2,6 +2,7 @@
 // verification worker (worker/index.ts) runs this outside the Next.js runtime.
 import type { Client, PlainTransactionDetails } from "@nimiq/core";
 import type { PlainTxDetails, TxState } from "@/lib/gifts/verification";
+import { env } from "@/lib/env";
 
 /**
  * Long-lived `@nimiq/core` light client for the verification worker.
@@ -13,8 +14,12 @@ import type { PlainTxDetails, TxState } from "@/lib/gifts/verification";
 
 let clientPromise: Promise<Client> | null = null;
 
+/**
+ * The network this client syncs. Same validated source the verifier uses, so
+ * the worker can never watch one chain while verification expects another.
+ */
 export function nimiqNetwork(): string {
-  return process.env.NIMIQ_NETWORK ?? "mainalbatross";
+  return env.nimiqNetwork();
 }
 
 export async function getNimiqClient(): Promise<Client> {

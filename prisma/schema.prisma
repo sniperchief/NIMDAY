@@ -1,6 +1,7 @@
 // NIMday schema.
 //   Phase 1 — creator flow + public page (User / Birthday / Wish / AuthNonce)
 //   Phase 2 — NIM gifting + verification (PaymentIntent / Gift / ProcessedTransaction / WorkerCheckpoint)
+//   Phase 3 — birthday messages (Message). Quest progress is derived, never stored.
 
 generator client {
   provider = "prisma-client-js"
@@ -8,7 +9,14 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Runtime connection. Behind a pooler (Supabase/pgBouncer) this is the
+  // pooled port with ?pgbouncer=true — the app only ever runs queries.
   url      = env("DATABASE_URL")
+  // Migrations need a direct, unpooled connection: they take advisory locks
+  // and run DDL, which a transaction-mode pooler won't carry. Prisma requires
+  // this to be set whenever it is declared — locally (PGlite/Docker, no pooler)
+  // just point it at the same URL as DATABASE_URL.
+  directUrl = env("DIRECT_URL")
 }
 
 enum Currency {
@@ -61,6 +69,7 @@ model Birthday {
   wishes         Wish[]
   paymentIntents PaymentIntent[]
   gifts          Gift[]
+  messages       Message[]
 
   @@index([published])
 }
@@ -152,9 +161,33 @@ model Gift {
   confirmedAt      DateTime
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
+  messages         Message[]
 
   @@index([birthdayId])
   @@index([wishId])
+}
+
+/// A short birthday message left by a visitor. No wallet is required to leave one.
+/// `anonymous` hides the sender in every response; the row still keeps whatever we
+/// know, so anonymity is a display rule, never a gap in the record.
+model Message {
+  id         String   @id @default(cuid())
+  birthday   Birthday @relation(fields: [birthdayId], references: [id], onDelete: Cascade)
+  birthdayId String
+  body       String
+  /// Free-text display name the visitor typed. Never shown when `anonymous`.
+  senderName String?
+  /// Wallet address, when the visitor had one connected. Never returned by the API.
+  senderAddress String?
+  anonymous  Boolean  @default(false)
+  /// Set only when the message follows a confirmed, non-anonymous gift. Resolved
+  /// server-side from a payment intent — the client never supplies a gift id.
+  gift       Gift?    @relation(fields: [giftId], references: [id], onDelete: SetNull)
+  giftId     String?
+  createdAt  DateTime @default(now())
+
+  @@index([birthdayId, createdAt])
+  @@index([giftId])
 }
 
 /// Ledger of every transaction hash the worker has acted on — the second,

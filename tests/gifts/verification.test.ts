@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   verifyTransaction,
-  NIMIQ_MAINNET,
+  EXPECTED_NETWORK,
   type PlainTxDetails,
   type IntentForVerification,
 } from "@/lib/gifts/verification";
@@ -32,7 +32,7 @@ function tx(over: Partial<PlainTxDetails> = {}): PlainTxDetails {
     sender: SENDER,
     recipient: RECIPIENT,
     value: 100_000,
-    network: NIMIQ_MAINNET,
+    network: EXPECTED_NETWORK,
     data: { type: "raw", raw: Buffer.from(memoFor(SHORT_ID), "utf8").toString("hex") },
     ...over,
   };
@@ -75,7 +75,11 @@ describe("verifyTransaction", () => {
   });
 
   it("rejects the wrong network", () => {
-    const r = verifyTransaction(intent(), tx({ network: "testalbatross" }));
+    // Any network that isn't the configured one — so the case holds whether the
+    // app is pointed at mainnet or testnet.
+    const other =
+      EXPECTED_NETWORK === "testalbatross" ? "mainalbatross" : "testalbatross";
+    const r = verifyTransaction(intent(), tx({ network: other }));
     expect(r).toMatchObject({ ok: false, reason: "wrong_network" });
   });
 

@@ -3,33 +3,30 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { env } from "@/lib/env";
+import {
+  ACCEPTED_IMAGE_TYPES,
+  EXT_TO_TYPE,
+  MAX_IMAGE_BYTES,
+  type StorageDriver,
+  type StoredFile,
+} from "@/lib/storage/types";
+import {
+  SupabaseStorageDriver,
+  readSupabaseConfig,
+} from "@/lib/storage/supabase";
 
-export interface StoredFile {
-  id: string;
-  url: string;
-}
-
-export interface StorageDriver {
-  put(bytes: Buffer, opts: { contentType: string }): Promise<StoredFile>;
-  get(id: string): Promise<{ bytes: Buffer; contentType: string } | null>;
-}
-
-export const ACCEPTED_IMAGE_TYPES: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/gif": "gif",
+export {
+  ACCEPTED_IMAGE_TYPES,
+  MAX_IMAGE_BYTES,
+  type StorageDriver,
+  type StoredFile,
 };
-const EXT_TO_TYPE: Record<string, string> = Object.fromEntries(
-  Object.entries(ACCEPTED_IMAGE_TYPES).map(([type, ext]) => [ext, type]),
-);
-
-export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 /**
  * Dev/local driver: writes to ./storage-uploads and serves via /api/uploads/<id>.
- * Not durable on ephemeral/serverless hosts — swap for an S3/R2 driver in prod
- * by implementing StorageDriver and branching in getStorage().
+ * Not durable on ephemeral/serverless hosts (Vercel's filesystem is read-only,
+ * and a container's disk is lost on redeploy) — use STORAGE_DRIVER="supabase"
+ * there.
  */
 class LocalStorageDriver implements StorageDriver {
   private dir = path.join(process.cwd(), "storage-uploads");
@@ -61,12 +58,32 @@ class LocalStorageDriver implements StorageDriver {
 
 let cached: StorageDriver | null = null;
 
+/**
+ * The configured driver.
+ *
+ * An unrecognised STORAGE_DRIVER now **throws** instead of silently falling back
+ * to local disk: a typo used to mean uploads quietly went to a container's
+ * ephemeral filesystem and vanished on the next deploy.
+ */
 export function getStorage(): StorageDriver {
   if (cached) return cached;
-  switch (env.storageDriver()) {
+  const driver = env.storageDriver();
+  switch (driver) {
     case "local":
-    default:
       cached = new LocalStorageDriver();
+      break;
+    case "supabase":
+      cached = new SupabaseStorageDriver(readSupabaseConfig());
+      break;
+    default:
+      throw new Error(
+        `STORAGE_DRIVER="${driver}" is not a storage driver. Use "local" or "supabase".`,
+      );
   }
   return cached;
+}
+
+/** Test-only: drop the memoised driver so config changes take effect. */
+export function __resetStorage(): void {
+  cached = null;
 }
