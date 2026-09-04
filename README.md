@@ -5,10 +5,14 @@
 A digital birthday card that doubles as a gift wishlist, built as a **Nimiq Pay Mini App**.
 Create a birthday page, add a few wishes, connect your Nimiq wallet, publish, and share one link.
 
-**Current status: release candidate.** Creator flow, public birthday page, NIM
-gifting with backend verification, birthday messages and a creator dashboard are
-all in. See `PRD.md` for the product and `FINAL_READINESS_RESULTS.md` for the
-pre-release audit, test results and known limitations.
+**Current status: release candidate.** The creator flow, public birthday page,
+NIM gifting with backend verification, birthday messages, the Birthday Quest and
+the creator dashboard are all in, with 189 passing tests and a clean build.
+
+**Not yet verified:** no Nimiq Pay device has been tested against this build, so
+real wallet connection, real signing and real NIM movement are unproven. The
+gift path has only been exercised with synthetic transactions through the real
+verification and credit code.
 
 > A payment only becomes a gift when the **backend** independently verifies a
 > confirmed on-chain transaction. The frontend can never declare success.

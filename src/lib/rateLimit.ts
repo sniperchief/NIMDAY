@@ -3,8 +3,10 @@ import "server-only";
 /**
  * A deliberately small in-process rate limiter for the unauthenticated message
  * endpoint. It stops the obvious abuse (someone holding down "send") without
- * pretending to be infrastructure — see PHASE_3_RESULTS.md: per-instance only,
- * so it is not a defence for a multi-instance deployment.
+ * pretending to be infrastructure. It is per-instance only: behind several
+ * server instances the effective limit multiplies, and it resets on deploy, so
+ * it is not a defence for a multi-instance deployment. A shared store is the
+ * real fix.
  */
 
 interface Bucket {
