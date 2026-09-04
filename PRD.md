@@ -7,7 +7,8 @@
 **Tagline:** **Your birthday. Your wishes. One beautiful link.**
 
 > This file is a copy of the PRD provided at project kickoff, kept in-repo for reference.
-> The authoritative research/decisions live in `TECHNICAL_PLAN.md` and `PHASE_0_RESULTS.md`.
+> The authoritative record of what was built, verified and left open lives in
+> `FINAL_READINESS_RESULTS.md`.
 
 ---
 

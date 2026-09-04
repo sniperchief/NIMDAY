@@ -1,6 +1,0 @@
-{
-  "name": "nimday-phase0-verify",
-  "private": true,
-  "description": "Phase 0 spike: Node.js Nimiq transaction + signature verification PoC",
-  "dependencies": { "@nimiq/core": "^2.21.0" }
-}

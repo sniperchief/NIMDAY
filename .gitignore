@@ -25,3 +25,11 @@ next-env.d.ts
 /spike/verify-node/node_modules
 
 /.pglite
+
+# internal working documents — kept locally, not published to the repo
+/TECHNICAL_PLAN.md
+/PHASE_0_RESULTS.md
+/PHASE_1_RESULTS.md
+/PHASE_2_RESULTS.md
+/PHASE_3_RESULTS.md
+/spike

@@ -16,7 +16,8 @@ systems. The Phase 2 payment implementation was **not** rewritten.
 
 ## 1. Audit
 
-Read against `PRD.md`, `TECHNICAL_PLAN.md` and the four phase result documents,
+Read against `PRD.md`, plus the technical plan and the four phase result
+documents (kept as internal working notes, not published to this repo),
 then walked the code: every API route, the authorization helpers, the payment
 path, the message path, and the client components on the three screens that
 matter (public page, create flow, dashboard).
