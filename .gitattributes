@@ -1,0 +1,3 @@
+# npm rewrites this with CRLF on Windows, which turns a one-line change
+# into a whole-file diff. Keep it LF everywhere.
+package-lock.json text eol=lf
