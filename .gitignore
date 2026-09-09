@@ -24,7 +24,7 @@ next-env.d.ts
 /coverage
 /spike/verify-node/node_modules
 
-/.pglite
+/.pglite*
 
 # internal working documents — kept locally, not published to the repo
 /TECHNICAL_PLAN.md
