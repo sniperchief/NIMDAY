@@ -26,18 +26,33 @@ export { normalizeAddress };
 export type SignatureEncoding =
   | "raw-utf8"
   | "sha256-utf8"
-  | "nimiq-signed-message";
+  | "nimiq-signed-message"
+  | "nimiq-signed-message-raw"
+  | "eth-style-prefix";
 
 export const SIGNATURE_ENCODINGS: SignatureEncoding[] = [
+  "nimiq-signed-message",
   "raw-utf8",
   "sha256-utf8",
-  "nimiq-signed-message",
+  "nimiq-signed-message-raw",
+  "eth-style-prefix",
 ];
 
 /** Set to a single encoding once confirmed on a Nimiq Pay device. */
 export const PINNED_ENCODING: SignatureEncoding | null = null;
 
-const NIMIQ_MSG_PREFIX = "\x19Nimiq Signed Message:\n";
+/**
+ * Nimiq's signed-message convention follows Bitcoin's: the leading byte is
+ * the *length* of the prefix string, not a fixed version byte. "Nimiq Signed
+ * Message:" plus a newline is 22 characters, so that byte is 0x16.
+ *
+ * This previously used 0x19, Ethereum's EIP-191 version byte, which is a
+ * different scheme entirely. That is why no candidate matched the first real
+ * signature from a Nimiq Pay device.
+ */
+const NIMIQ_MSG_PREFIX = "\x16Nimiq Signed Message:\n";
+/** The previous, incorrect prefix. Kept as a candidate so a match is reported. */
+const ETH_STYLE_PREFIX = "\x19Nimiq Signed Message:\n";
 
 /** Produce the exact byte buffer that `sign()` is assumed to have signed. */
 export function encodeSignedMessage(
@@ -53,6 +68,15 @@ export function encodeSignedMessage(
     case "nimiq-signed-message": {
       const prefixed = new TextEncoder().encode(
         NIMIQ_MSG_PREFIX + utf8.length + message,
+      );
+      return new Uint8Array(createHash("sha256").update(prefixed).digest());
+    }
+    case "nimiq-signed-message-raw":
+      // Same framing, signed directly rather than over a digest.
+      return new TextEncoder().encode(NIMIQ_MSG_PREFIX + utf8.length + message);
+    case "eth-style-prefix": {
+      const prefixed = new TextEncoder().encode(
+        ETH_STYLE_PREFIX + utf8.length + message,
       );
       return new Uint8Array(createHash("sha256").update(prefixed).digest());
     }

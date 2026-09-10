@@ -1,6 +1,10 @@
 import { route, readJson, ok, fail } from "@/lib/http";
 import { verifyRequestSchema } from "@/lib/validation";
-import { verifyChallenge, type ChallengeFailure } from "@/lib/nimiq/challenge";
+import {
+  verifyChallenge,
+  buildChallengeMessage,
+  type ChallengeFailure,
+} from "@/lib/nimiq/challenge";
 import { findAuthNonce, consumeAuthNonce } from "@/lib/auth/nonce";
 import { createSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
@@ -20,6 +24,18 @@ export const POST = route(async (req) => {
   const stored = await findAuthNonce(body.nonce);
   const result = await verifyChallenge(body, stored);
   if (!result.ok) {
+    if (result.reason === "bad_signature") {
+      // The exact bytes Nimiq Pay signs are still unconfirmed, so record what
+      // the device actually sent when none of the candidate encodings match.
+      // A public key, a signature and a single-use public challenge are all
+      // public values — nothing secret is written here.
+      console.error("[auth] signature did not match any known encoding", {
+        message: buildChallengeMessage(body.nonce),
+        publicKey: body.publicKey,
+        signature: body.signature,
+        claimedAddress: body.address,
+      });
+    }
     return fail(401, "auth_failed", MESSAGES[result.reason]);
   }
 
