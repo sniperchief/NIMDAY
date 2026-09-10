@@ -7,26 +7,22 @@
  */
 
 import { init } from "@nimiq/mini-app-sdk";
-import { parseSendResult, TxResultError } from "@/lib/nimiq/txResult";
+import { parseSendResult } from "@/lib/nimiq/txResult";
+import {
+  WalletError,
+  classifyWalletError,
+  describeWalletError,
+  friendlyWalletMessage,
+  isProviderError,
+  type WalletErrorCode,
+} from "@/lib/nimiq/walletError";
 
-export type WalletErrorCode =
-  | "unavailable" // not running inside Nimiq Pay
-  | "rejected" // user declined the native dialog
-  | "consensus" // Nimiq network not ready yet
-  | "no-account" // provider returned no address
-  | "insufficient" // not enough NIM to cover the gift + fee
-  | "invalid-tx" // the wallet rejected the transaction as malformed
-  | "tx-result" // sendBasicTransactionWithData returned something unexpected
-  | "unknown";
-
-export class WalletError extends Error {
-  code: WalletErrorCode;
-  constructor(code: WalletErrorCode, message: string) {
-    super(message);
-    this.name = "WalletError";
-    this.code = code;
-  }
-}
+export {
+  WalletError,
+  describeWalletError,
+  friendlyWalletMessage,
+  type WalletErrorCode,
+};
 
 type ProviderError = { error: { type: string; message: string } };
 
@@ -70,35 +66,8 @@ export function isNimiqPayAvailable(): boolean {
   );
 }
 
-function isProviderError(
-  v: unknown,
-): v is { error: { type: string; message: string } } {
-  return typeof v === "object" && v !== null && "error" in v;
-}
-
-function mapThrown(err: unknown): WalletError {
-  if (err instanceof WalletError) return err;
-  if (err instanceof TxResultError) {
-    return new WalletError("tx-result", err.message);
-  }
-  const message = err instanceof Error ? err.message : String(err);
-  const lc = message.toLowerCase();
-  if (
-    lc.includes("denied") ||
-    lc.includes("reject") ||
-    lc.includes("permission") ||
-    lc.includes("cancel")
-  ) {
-    return new WalletError("rejected", "Request was declined");
-  }
-  if (lc.includes("insufficient") || lc.includes("balance") || lc.includes("funds")) {
-    return new WalletError("insufficient", "Not enough NIM for this gift");
-  }
-  if (lc.includes("invalid") || lc.includes("malformed")) {
-    return new WalletError("invalid-tx", "The wallet couldn't build that transaction");
-  }
-  return new WalletError("unknown", message);
-}
+/** All wallet failures funnel through the shared classifier. */
+const mapThrown = classifyWalletError;
 
 export async function getConsensusReady(): Promise<boolean> {
   try {
@@ -118,7 +87,7 @@ export async function connectWallet(): Promise<{ address: string }> {
     throw mapThrown(err);
   }
   if (isProviderError(result)) {
-    throw new WalletError("rejected", result.error.message || "Request was declined");
+    throw mapThrown(result);
   }
   const address = Array.isArray(result) ? result[0] : undefined;
   if (!address) throw new WalletError("no-account", "No Nimiq account was returned");
@@ -136,7 +105,7 @@ export async function signMessage(
     throw mapThrown(err);
   }
   if (isProviderError(result)) {
-    throw new WalletError("rejected", result.error.message || "Signing was declined");
+    throw mapThrown(result);
   }
   if (!result.publicKey || !result.signature) {
     throw new WalletError("unknown", "Signature response was incomplete");
@@ -166,44 +135,11 @@ export async function sendGiftTransaction(params: {
     throw mapThrown(err);
   }
   if (isProviderError(result)) {
-    throw mapThrown(new Error(result.error.message || result.error.type));
+    throw mapThrown(result);
   }
   return parseSendResult(result);
 }
 
-/**
- * Friendly text, plus the wallet's own words when we don't recognise what it
- * said. "unknown" and "tx-result" both mean the device did something we have
- * never seen, and NIMday runs inside a webview where nobody can open a console
- * — so the raw message is the only way anyone finds out what happened.
- */
-export function describeWalletError(err: WalletError): string {
-  const friendly = friendlyWalletMessage(err.code);
-  if (err.code !== "unknown" && err.code !== "tx-result") return friendly;
-  const detail = err.message?.trim();
-  if (!detail || detail === friendly) return friendly;
-  return `${friendly}
 
-Nimiq Pay said: ${detail}`;
-}
 
-export function friendlyWalletMessage(code: WalletErrorCode): string {
-  switch (code) {
-    case "unavailable":
-      return "Open this page inside Nimiq Pay to send a gift.";
-    case "rejected":
-      return "No problem — nothing was sent. You can try again whenever you're ready.";
-    case "consensus":
-      return "Nimiq is still connecting. Give it a moment and try again.";
-    case "no-account":
-      return "We couldn't find a Nimiq account. Check your Nimiq Pay wallet and retry.";
-    case "insufficient":
-      return "There isn't enough NIM in your wallet for this gift.";
-    case "invalid-tx":
-      return "The wallet couldn't build that transaction. Try a different amount.";
-    case "tx-result":
-      return "The gift may have been sent, but we couldn't read the confirmation. Check your wallet before retrying.";
-    default:
-      return "Something went wrong talking to Nimiq Pay. Please try again.";
-  }
-}
+
