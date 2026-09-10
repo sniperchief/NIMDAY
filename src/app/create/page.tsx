@@ -9,14 +9,19 @@ export const metadata: Metadata = {
 
 export default function CreatePage() {
   return (
-    <main className="min-h-dvh bg-cream px-5 py-10">
-      <div className="mx-auto mb-8 max-w-xl">
-        <Link href="/" className="text-sm text-ink/50 hover:text-ink">
+    <main className="min-h-dvh bg-cream px-4 py-6 sm:px-5 sm:py-10">
+      <div className="mx-auto mb-6 max-w-xl sm:mb-8">
+        <Link
+          href="/"
+          className="-ml-2 inline-flex min-h-[40px] items-center rounded-full px-2 text-sm text-ink/50 transition hover:text-ink"
+        >
           ← NIMday
         </Link>
-        <h1 className="mt-2 font-display text-3xl text-ink">Create your NIMday</h1>
+        <h1 className="mt-1 font-display text-3xl text-ink sm:text-4xl">
+          Create your NIMday
+        </h1>
         <p className="mt-1 text-sm text-ink/60">
-          A birthday card and a small wishlist, in one link. Takes about a minute.
+          A birthday card and a small wishlist, in one link.
         </p>
       </div>
       <CreateWizard />

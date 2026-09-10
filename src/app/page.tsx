@@ -19,6 +19,9 @@ const SAMPLE_WISHES = [
     targetNim: "120",
     currency: "NIM" as const,
     giftType: "FUND" as const,
+    raisedNim: "85",
+    progressPct: 71,
+    fulfilled: false,
   },
   {
     id: "s2",
@@ -28,6 +31,9 @@ const SAMPLE_WISHES = [
     targetNim: "60",
     currency: "NIM" as const,
     giftType: "EITHER" as const,
+    raisedNim: "60",
+    progressPct: 100,
+    fulfilled: true,
   },
 ];
 
@@ -37,79 +43,90 @@ function nextMonthISO() {
   return d.toISOString().slice(0, 10);
 }
 
-const STEPS = [
-  ["Create", "Add the birthday, a message, and a few wishes. Pick a theme."],
-  ["Connect", "Link your Nimiq Pay wallet so gifts can reach you directly."],
-  ["Share", "Send one beautiful link to the people who want to celebrate you."],
-];
+/** Soft colour wash behind the card. Decorative only. */
+function Glow() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div className="absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#ff5c8a]/20 blur-3xl sm:h-96 sm:w-96" />
+      <div className="absolute top-40 -right-20 h-64 w-64 rounded-full bg-[#ffd166]/25 blur-3xl" />
+      <div className="absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-[#4cc9f0]/20 blur-3xl" />
+    </div>
+  );
+}
 
 export default function Home() {
   return (
-    <main className="mx-auto max-w-5xl px-5 py-14 sm:py-20">
-      <section className="grid items-center gap-12 lg:grid-cols-2">
-        <div className="animate-fade-up">
-          <p className="text-sm font-medium uppercase tracking-wide text-ink/45">
-            NIMday
-          </p>
-          <h1 className="mt-3 font-display text-4xl leading-[1.1] text-ink sm:text-5xl">
-            Your birthday. Your wishes. One beautiful link.
-          </h1>
-          <p className="mt-4 max-w-md text-[15px] leading-relaxed text-ink/65">
-            A digital birthday card that doubles as a gift wishlist. Friends open
-            it, pick something you&apos;d love, and send a NIM gift straight to
-            your wallet — no middleman, no awkward asking.
-          </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link
-              href="/create"
-              className="rounded-full bg-ink px-6 py-3.5 text-base font-medium text-cream transition active:scale-[0.98]"
-            >
-              Create your NIMday
-            </Link>
-            <a
-              href="#how"
-              className="rounded-full bg-white px-6 py-3.5 text-base font-medium text-ink ring-1 ring-black/10"
-            >
-              How it works
-            </a>
-            <Link
-              href="/dashboard"
-              className="rounded-full px-4 py-3.5 text-base font-medium text-ink/60 transition hover:text-ink"
-            >
-              My NIMday
-            </Link>
-          </div>
-          <p className="mt-4 text-xs text-ink/40">
-            Takes about a minute. NIMday never holds your money.
-          </p>
+    <main className="relative min-h-dvh overflow-hidden">
+      <Glow />
+
+      <header className="mx-auto flex max-w-6xl items-center justify-between px-5 pt-6">
+        <span className="font-display text-lg text-ink">NIMday</span>
+        <Link
+          href="/dashboard"
+          className="rounded-full px-4 py-2 text-sm font-medium text-ink/60 transition hover:bg-black/[0.04] hover:text-ink"
+        >
+          My NIMday
+        </Link>
+      </header>
+
+      <div className="mx-auto max-w-6xl px-5 pb-16 pt-10 sm:pb-24 sm:pt-16">
+        <div className="grid items-center gap-12 lg:grid-cols-[1fr_minmax(0,420px)] lg:gap-16">
+          {/* ---------- words ---------- */}
+          <section className="animate-fade-up text-center lg:text-left">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/70 px-3.5 py-1.5 text-xs font-medium text-ink/70 ring-1 ring-black/[0.06] backdrop-blur">
+              🎂 A birthday card that gives back
+            </span>
+
+            <h1 className="mt-5 font-display text-[40px] leading-[1.05] text-ink sm:text-6xl">
+              Your birthday.
+              <br />
+              Your wishes.
+              <br />
+              <span className="text-[#ff5c8a]">One beautiful link.</span>
+            </h1>
+
+            <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-ink/65 lg:mx-0">
+              Make a card, add a few things you&apos;d actually love, and share one
+              link. Friends pick a wish and send a gift straight to your wallet.
+            </p>
+
+            <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center lg:justify-start">
+              <Link
+                href="/create"
+                className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-ink px-7 text-base font-semibold text-cream shadow-lg shadow-black/10 transition active:scale-[0.98]"
+              >
+                Create your NIMday
+              </Link>
+              <Link
+                href="/dashboard"
+                className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-white/80 px-7 text-base font-medium text-ink ring-1 ring-black/[0.08] backdrop-blur transition active:scale-[0.98]"
+              >
+                My NIMday
+              </Link>
+            </div>
+
+            <p className="mt-5 text-sm text-ink/45">
+              Takes about a minute · NIMday never holds your money
+            </p>
+          </section>
+
+          {/* ---------- the card ---------- */}
+          <section className="relative mx-auto w-full max-w-[380px] lg:max-w-none">
+            {/* stacked card behind, for depth */}
+            <div
+              aria-hidden
+              className="absolute inset-x-4 top-6 h-full animate-float-slow rounded-[28px] bg-white/60 shadow-xl ring-1 ring-black/[0.04]"
+            />
+            <div className="relative animate-float">
+              <BirthdayCard data={SAMPLE} compact>
+                <WishList wishes={SAMPLE_WISHES} theme={SAMPLE.theme} />
+              </BirthdayCard>
+            </div>
+          </section>
         </div>
+      </div>
 
-        <div className="mx-auto w-full max-w-sm animate-pop-in">
-          <BirthdayCard data={SAMPLE} compact>
-            <WishList wishes={SAMPLE_WISHES} theme={SAMPLE.theme} />
-          </BirthdayCard>
-        </div>
-      </section>
-
-      <section id="how" className="mt-24 scroll-mt-10">
-        <h2 className="font-display text-2xl text-ink">How it works</h2>
-        <ol className="mt-6 grid gap-4 sm:grid-cols-3">
-          {STEPS.map(([title, body], i) => (
-            <li
-              key={title}
-              className="rounded-2xl bg-white p-5 ring-1 ring-black/5"
-            >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-sm font-semibold text-cream">
-                {i + 1}
-              </span>
-              <h3 className="mt-3 font-medium text-ink">{title}</h3>
-              <p className="mt-1 text-sm text-ink/60">{body}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <footer className="mt-24 border-t border-black/10 pt-6 text-xs text-ink/40">
+      <footer className="mx-auto max-w-6xl px-5 pb-10 text-center text-xs text-ink/40 lg:text-left">
         NIMday — a birthday product powered by NIM.
       </footer>
     </main>

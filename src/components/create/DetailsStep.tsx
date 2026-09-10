@@ -4,15 +4,18 @@ import { useState } from "react";
 import { Button, Field, Input, Textarea } from "@/components/ui";
 import { ThemePicker } from "./ThemePicker";
 import { ImageUpload } from "./ImageUpload";
+import { DateField } from "./DateField";
 import type { Draft } from "./types";
 
 export function DetailsStep({
   draft,
   patch,
+  onBack,
   onNext,
 }: {
   draft: Draft;
   patch: (p: Partial<Draft>) => void;
+  onBack?: () => void;
   onNext: () => void;
 }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -47,10 +50,10 @@ export function DetailsStep({
       </Field>
 
       <Field label="Birthday" error={errors.birthday} hint="Used for the countdown.">
-        <Input
-          type="date"
+        <DateField
           value={draft.birthday}
-          onChange={(ev) => patch({ birthday: ev.target.value })}
+          invalid={Boolean(errors.birthday)}
+          onChange={(birthday) => patch({ birthday })}
         />
       </Field>
 
@@ -78,8 +81,15 @@ export function DetailsStep({
         <ThemePicker value={draft.theme} onChange={(theme) => patch({ theme })} />
       </div>
 
-      <div className="flex justify-end pt-2">
-        <Button size="lg" onClick={validateAndNext}>
+      <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
+        {onBack ? (
+          <Button variant="ghost" onClick={onBack} className="w-full sm:w-auto">
+            Back
+          </Button>
+        ) : (
+          <span />
+        )}
+        <Button size="lg" onClick={validateAndNext} className="w-full sm:w-auto">
           Next: add wishes
         </Button>
       </div>

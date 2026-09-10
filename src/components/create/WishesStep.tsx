@@ -110,11 +110,16 @@ function WishForm({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={onCancel}>
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onCancel}
+          className="w-full sm:w-auto"
+        >
           Cancel
         </Button>
-        <Button type="button" onClick={save}>
+        <Button type="button" onClick={save} className="w-full sm:w-auto">
           Save wish
         </Button>
       </div>
@@ -176,7 +181,7 @@ export function WishesStep({
           ) : (
             <li
               key={w.key}
-              className="flex items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-black/10"
+              className="flex flex-wrap items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-black/10"
             >
               <div className="h-12 w-12 flex-none overflow-hidden rounded-lg bg-black/5">
                 {w.imageUrl ? (
@@ -192,7 +197,7 @@ export function WishesStep({
                   </div>
                 )}
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 basis-40">
                 <p className="truncate text-sm font-medium text-ink">
                   {w.title || "Untitled wish"}
                 </p>
@@ -205,26 +210,28 @@ export function WishesStep({
                   </p>
                 ) : null}
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setEditingKey(w.key)}
-              >
-                Edit
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={gifted(w)}
-                title={
-                  gifted(w)
-                    ? "This wish has already received a gift"
-                    : undefined
-                }
-                onClick={() => remove(w.key)}
-              >
-                Remove
-              </Button>
+              <div className="ml-auto flex flex-none gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setEditingKey(w.key)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={gifted(w)}
+                  title={
+                    gifted(w)
+                      ? "This wish has already received a gift"
+                      : undefined
+                  }
+                  onClick={() => remove(w.key)}
+                >
+                  Remove
+                </Button>
+              </div>
             </li>
           ),
         )}
@@ -241,17 +248,27 @@ export function WishesStep({
           That&apos;s the maximum of {MAX_WISHES} wishes.
         </p>
       ) : (
-        <Button type="button" variant="secondary" onClick={() => setAdding(true)}>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => setAdding(true)}
+          className="w-full sm:w-auto"
+        >
           + Add a wish
         </Button>
       )}
 
-      <div className="flex justify-between pt-2">
-        <Button type="button" variant="ghost" onClick={onBack}>
+      <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onBack}
+          className="w-full sm:w-auto"
+        >
           Back
         </Button>
-        <Button size="lg" onClick={onNext}>
-          Next: connect wallet
+        <Button size="lg" onClick={onNext} className="w-full sm:w-auto">
+          Next: preview
         </Button>
       </div>
     </div>

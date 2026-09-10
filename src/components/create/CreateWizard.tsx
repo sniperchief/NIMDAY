@@ -27,7 +27,7 @@ import { useDraft, draftFromEditor } from "./useDraft";
 import type { DraftWish } from "./types";
 
 type Step = "details" | "wishes" | "connect" | "preview" | "done";
-const ORDER: Step[] = ["details", "wishes", "connect", "preview"];
+const ORDER: Step[] = ["connect", "details", "wishes", "preview"];
 const LABELS: Record<Step, string> = {
   details: "Details",
   wishes: "Wishes",
@@ -49,7 +49,7 @@ function toWishInput(w: DraftWish): WishInput {
 
 export function CreateWizard() {
   const { draft, setDraft, patch, clear } = useDraft();
-  const [step, setStep] = useState<Step>("details");
+  const [step, setStep] = useState<Step>("connect");
   const [authedAddress, setAuthedAddress] = useState<string | null>(null);
   const [birthday, setBirthday] = useState<EditorBirthday | null>(null);
   const [publishUrl, setPublishUrl] = useState<string | null>(null);
@@ -62,7 +62,10 @@ export function CreateWizard() {
     (async () => {
       try {
         const [me, existing] = await Promise.all([getMe(), getMyBirthday()]);
-        if (me) setAuthedAddress(me.user.walletAddress);
+        if (me) {
+          setAuthedAddress(me.user.walletAddress);
+          setStep("details");
+        }
         if (existing) {
           setBirthday(existing);
           setDraft(draftFromEditor(existing));
@@ -265,15 +268,17 @@ export function CreateWizard() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <ol className="mb-6 flex items-center gap-2 text-xs">
+      {/* Step indicator. On a narrow phone four numbered labels overflow, so
+          only the active step is named there; the rest are dots. */}
+      <ol className="mb-6 flex items-center gap-1.5 text-xs sm:gap-2">
         {ORDER.map((s, i) => {
           const active = s === step;
           const done = ORDER.indexOf(step) > i || step === "done";
           return (
-            <li key={s} className="flex items-center gap-2">
+            <li key={s} className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               <span
                 className={cn(
-                  "flex h-6 w-6 items-center justify-center rounded-full font-semibold",
+                  "flex h-7 w-7 flex-none items-center justify-center rounded-full text-[11px] font-semibold sm:h-6 sm:w-6",
                   active
                     ? "bg-ink text-cream"
                     : done
@@ -283,10 +288,17 @@ export function CreateWizard() {
               >
                 {done ? "✓" : i + 1}
               </span>
-              <span className={cn(active ? "text-ink" : "text-ink/40")}>
+              <span
+                className={cn(
+                  "truncate",
+                  active ? "text-ink" : "hidden text-ink/40 sm:inline",
+                )}
+              >
                 {LABELS[s]}
               </span>
-              {i < ORDER.length - 1 && <span className="text-ink/20">·</span>}
+              {i < ORDER.length - 1 && (
+                <span className="flex-none text-ink/20">·</span>
+              )}
             </li>
           );
         })}
@@ -297,6 +309,7 @@ export function CreateWizard() {
           <DetailsStep
             draft={draft}
             patch={patch}
+            onBack={() => setStep("connect")}
             onNext={() => setStep("wishes")}
           />
         )}
@@ -305,7 +318,7 @@ export function CreateWizard() {
             draft={draft}
             setDraft={setDraft}
             onBack={() => setStep("details")}
-            onNext={() => setStep("connect")}
+            onNext={() => setStep("preview")}
           />
         )}
         {step === "connect" && (
@@ -324,8 +337,7 @@ export function CreateWizard() {
                 setAuthedAddress(a);
                 setPublishError(null);
               }}
-              onBack={() => setStep("wishes")}
-              onNext={() => setStep("preview")}
+              onNext={() => setStep("details")}
             />
           </div>
         )}
@@ -369,8 +381,8 @@ export function CreateWizard() {
               </div>
             )}
 
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex gap-2">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+              <div className="flex justify-center gap-2">
                 <Button variant="ghost" onClick={() => setStep("details")}>
                   Edit details
                 </Button>
@@ -383,6 +395,7 @@ export function CreateWizard() {
                 loading={publishing}
                 disabled={!authedAddress}
                 onClick={finishPublish}
+                className="w-full sm:w-auto"
               >
                 Publish NIMday
               </Button>

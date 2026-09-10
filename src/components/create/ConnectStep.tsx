@@ -17,12 +17,10 @@ type Status = "idle" | "working" | "done" | "error";
 export function ConnectStep({
   authedAddress,
   onAuthed,
-  onBack,
   onNext,
 }: {
   authedAddress: string | null;
   onAuthed: (address: string) => void;
-  onBack: () => void;
   onNext: () => void;
 }) {
   const [status, setStatus] = useState<Status>(authedAddress ? "done" : "idle");
@@ -78,12 +76,9 @@ export function ConnectStep({
             Gifts from your NIMday will arrive straight to this wallet.
           </p>
         </div>
-        <div className="flex justify-between">
-          <Button variant="ghost" onClick={onBack}>
-            Back
-          </Button>
-          <Button size="lg" onClick={onNext}>
-            Next: preview
+        <div className="flex justify-end">
+          <Button size="lg" onClick={onNext} className="w-full sm:w-auto">
+            Next: birthday details
           </Button>
         </div>
       </div>
@@ -93,10 +88,11 @@ export function ConnectStep({
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="font-medium text-ink">Connect your Nimiq wallet</h3>
+        <h3 className="font-medium text-ink">First, connect your Nimiq wallet</h3>
         <p className="mt-1 text-sm text-ink/60">
-          You&apos;ll approve a signature in Nimiq Pay — no transaction, no fees.
-          This proves the wallet is yours so only you can edit this NIMday.
+          You&apos;ll approve a signature in Nimiq Pay. No transaction, no fees.
+          This proves the wallet is yours, so only you can edit this NIMday and
+          gifts arrive straight to you.
         </p>
       </div>
 
@@ -124,8 +120,13 @@ export function ConnectStep({
         </p>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Button size="lg" loading={status === "working"} onClick={run}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Button
+          size="lg"
+          loading={status === "working"}
+          onClick={run}
+          className="w-full sm:w-auto"
+        >
           Connect Nimiq Wallet
         </Button>
         {devAllowed && (
@@ -133,12 +134,6 @@ export function ConnectStep({
             Use a test wallet (dev)
           </Button>
         )}
-      </div>
-
-      <div className="pt-2">
-        <Button variant="ghost" onClick={onBack}>
-          Back
-        </Button>
       </div>
     </div>
   );

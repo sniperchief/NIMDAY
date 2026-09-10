@@ -27,9 +27,16 @@ export function ImageUpload({
       const url = await uploadImage(file);
       onChange(url);
     } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Couldn't upload that image",
-      );
+      // Uploads need a session. The wizard connects first so this shouldn't
+      // happen, but a session can lapse mid-flow — say what to do about it
+      // rather than showing the generic "Sign in to continue".
+      if (err instanceof ApiError && err.status === 401) {
+        setError("Reconnect your Nimiq wallet, then add the photo again.");
+      } else {
+        setError(
+          err instanceof ApiError ? err.message : "Couldn't upload that image",
+        );
+      }
     } finally {
       setBusy(false);
     }
