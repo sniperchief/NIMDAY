@@ -57,3 +57,22 @@ describe("Nimiq network configuration", () => {
     expect(env.isTestnet()).toBe(env.nimiqNetwork() !== NIMIQ_MAINNET);
   });
 });
+
+describe("seed nodes", () => {
+  it("uses the client's built-in seeds on mainnet", async () => {
+    const { seedNodesFor } = await import("@/lib/nimiq/client");
+    expect(seedNodesFor("mainalbatross")).toBeNull();
+  });
+
+  it("supplies explicit seeds on testnet, which has none built in", async () => {
+    const { seedNodesFor } = await import("@/lib/nimiq/client");
+    const seeds = seedNodesFor("testalbatross");
+    expect(seeds).not.toBeNull();
+    expect(seeds!.length).toBeGreaterThan(0);
+    // Without these the client starts, finds no peers, and never reaches
+    // consensus — silently, which is what made this hard to spot.
+    for (const seed of seeds!) {
+      expect(seed).toMatch(/^\/dns4\/seed\d+\.pos\.nimiq-testnet\.com\/tcp\/\d+\/wss$/);
+    }
+  });
+});

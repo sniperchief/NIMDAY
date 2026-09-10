@@ -17,6 +17,7 @@ import { prisma } from "@/lib/prisma";
 import {
   getNimiqClient,
   nimiqNetwork,
+  seedNodesFor,
   toPlainTxDetails,
   fetchTransaction,
 } from "@/lib/nimiq/client";
@@ -160,7 +161,12 @@ async function tick(client: Client): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  console.log(`[worker] connecting to Nimiq (${nimiqNetwork()})…`);
+  const network = nimiqNetwork();
+  const seeds = seedNodesFor(network);
+  console.log(
+    `[worker] connecting to Nimiq (${network}, ` +
+      `${seeds ? `${seeds.length} explicit seed node(s)` : "built-in seed nodes"})…`,
+  );
   const client = await getNimiqClient();
   console.log(`[worker] consensus established, head #${await client.getHeadHeight()}`);
 

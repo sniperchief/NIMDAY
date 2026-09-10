@@ -2,7 +2,7 @@
 // verification worker (worker/index.ts) runs this outside the Next.js runtime.
 import type { Client, PlainTransactionDetails } from "@nimiq/core";
 import type { PlainTxDetails, TxState } from "@/lib/gifts/verification";
-import { env } from "@/lib/env";
+import { env, NIMIQ_MAINNET, type NimiqNetwork } from "@/lib/env";
 
 /**
  * Long-lived `@nimiq/core` light client for the verification worker.
@@ -18,16 +18,40 @@ let clientPromise: Promise<Client> | null = null;
  * The network this client syncs. Same validated source the verifier uses, so
  * the worker can never watch one chain while verification expects another.
  */
-export function nimiqNetwork(): string {
+export function nimiqNetwork(): NimiqNetwork {
   return env.nimiqNetwork();
+}
+
+/**
+ * Testnet seed nodes.
+ *
+ * Mainnet's seeds are compiled into the client, so `config.network(...)` is
+ * enough there. The testnet's are not: on `testalbatross` the client starts,
+ * initialises its WASM worker, and then sits with zero peers forever because
+ * it has nowhere to dial. That failure is silent — no error, no reconnect, just
+ * a client that never reaches consensus and therefore never credits a gift.
+ */
+const TESTNET_SEED_NODES = [
+  "/dns4/seed1.pos.nimiq-testnet.com/tcp/8443/wss",
+  "/dns4/seed2.pos.nimiq-testnet.com/tcp/8443/wss",
+  "/dns4/seed3.pos.nimiq-testnet.com/tcp/8443/wss",
+  "/dns4/seed4.pos.nimiq-testnet.com/tcp/8443/wss",
+];
+
+/** Seed nodes to dial for a network, or null to use the client's built-in list. */
+export function seedNodesFor(network: NimiqNetwork): string[] | null {
+  return network === NIMIQ_MAINNET ? null : TESTNET_SEED_NODES;
 }
 
 export async function getNimiqClient(): Promise<Client> {
   if (!clientPromise) {
     clientPromise = (async () => {
       const Nimiq = await import("@nimiq/core");
+      const network = nimiqNetwork();
       const config = new Nimiq.ClientConfiguration();
-      config.network(nimiqNetwork());
+      config.network(network);
+      const seeds = seedNodesFor(network);
+      if (seeds) config.seedNodes(seeds);
       config.logLevel("warn");
       const client = await Nimiq.Client.create(config.build());
       await client.waitForConsensusEstablished();
