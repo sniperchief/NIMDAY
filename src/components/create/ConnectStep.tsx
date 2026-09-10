@@ -6,7 +6,7 @@ import {
   connectWallet,
   signMessage,
   isNimiqPayAvailable,
-  friendlyWalletMessage,
+  describeWalletError,
   WalletError,
 } from "@/lib/nimiq/provider";
 import { requestNonce, verifySignature, ApiError } from "@/lib/apiClient";
@@ -41,7 +41,7 @@ export function ConnectStep({
       setStatus("done");
     } catch (err) {
       setStatus("error");
-      if (err instanceof WalletError) setMessage(friendlyWalletMessage(err.code));
+      if (err instanceof WalletError) setMessage(describeWalletError(err));
       else if (err instanceof ApiError) setMessage(err.message);
       else setMessage("Something went wrong. Please try again.");
     }
@@ -115,7 +115,7 @@ export function ConnectStep({
       )}
 
       {message ? (
-        <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200">
+        <p className="whitespace-pre-line break-words rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200">
           {message}
         </p>
       ) : null}

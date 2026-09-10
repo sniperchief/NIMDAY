@@ -171,6 +171,22 @@ export async function sendGiftTransaction(params: {
   return parseSendResult(result);
 }
 
+/**
+ * Friendly text, plus the wallet's own words when we don't recognise what it
+ * said. "unknown" and "tx-result" both mean the device did something we have
+ * never seen, and NIMday runs inside a webview where nobody can open a console
+ * — so the raw message is the only way anyone finds out what happened.
+ */
+export function describeWalletError(err: WalletError): string {
+  const friendly = friendlyWalletMessage(err.code);
+  if (err.code !== "unknown" && err.code !== "tx-result") return friendly;
+  const detail = err.message?.trim();
+  if (!detail || detail === friendly) return friendly;
+  return `${friendly}
+
+Nimiq Pay said: ${detail}`;
+}
+
 export function friendlyWalletMessage(code: WalletErrorCode): string {
   switch (code) {
     case "unavailable":

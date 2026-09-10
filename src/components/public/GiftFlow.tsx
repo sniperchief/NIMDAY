@@ -9,6 +9,7 @@ import {
   sendGiftTransaction,
   isNimiqPayAvailable,
   friendlyWalletMessage,
+  describeWalletError,
   WalletError,
 } from "@/lib/nimiq/provider";
 import { giftFailureMessage } from "@/lib/gifts/failureCopy";
@@ -307,7 +308,7 @@ export function GiftFlow({
       setStep("review");
       setError(
         e instanceof WalletError
-          ? friendlyWalletMessage(e.code)
+          ? describeWalletError(e)
           : e instanceof ApiError
             ? e.message
             : "The gift couldn't be sent. Please try again.",
@@ -461,7 +462,7 @@ export function GiftFlow({
               Sending {intent.amountNim} NIM to {birthdayName} for “{intent.wishTitle}”.
             </p>
             {error ? (
-              <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
+              <p role="alert" className="whitespace-pre-line break-words rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
                 {error}
               </p>
             ) : null}
@@ -511,7 +512,7 @@ export function GiftFlow({
               Nimiq Pay will ask you to approve. Nothing leaves your wallet until you do.
             </p>
             {error ? (
-              <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
+              <p role="alert" className="whitespace-pre-line break-words rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
                 {error}
               </p>
             ) : null}
