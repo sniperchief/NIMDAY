@@ -76,6 +76,13 @@ describe("classifyWalletError", () => {
     expect(
       classifyWalletError({ error: { message: "Consensus not established" } }).code,
     ).toBe("consensus");
+    // The exact message a real device produced when its own client couldn't
+    // read the account.
+    expect(
+      classifyWalletError(
+        "Failed to send payment transaction: Something went wrong syncing your account",
+      ).code,
+    ).toBe("consensus");
     expect(
       classifyWalletError({ error: { message: "Invalid recipient address" } }).code,
     ).toBe("invalid-tx");

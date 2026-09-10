@@ -113,7 +113,13 @@ export function classifyWalletError(err: unknown): WalletError {
   ) {
     return new WalletError("insufficient", text);
   }
-  if (lc.includes("consensus") || lc.includes("not established")) {
+  // "Something went wrong syncing your account" is Nimiq Pay telling us its
+  // own client could not read the account, not that our transaction was bad.
+  if (
+    lc.includes("consensus") ||
+    lc.includes("not established") ||
+    lc.includes("sync")
+  ) {
     return new WalletError("consensus", text);
   }
   if (
@@ -134,7 +140,10 @@ export function friendlyWalletMessage(code: WalletErrorCode): string {
     case "rejected":
       return "No problem — nothing was sent. You can try again whenever you're ready.";
     case "consensus":
-      return "Nimiq is still connecting. Give it a moment and try again.";
+      return (
+        "Nimiq Pay couldn't sync your account. Check that your wallet shows " +
+        "a balance and has finished loading, then try again."
+      );
     case "no-account":
       return "We couldn't find a Nimiq account. Check your Nimiq Pay wallet and retry.";
     case "insufficient":
