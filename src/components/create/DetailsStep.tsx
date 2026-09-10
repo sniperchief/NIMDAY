@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Field, Input, Textarea } from "@/components/ui";
+import { Button, Field, Fieldset, Input, Textarea } from "@/components/ui";
 import { ThemePicker } from "./ThemePicker";
 import { ImageUpload } from "./ImageUpload";
 import { DateField } from "./DateField";
@@ -49,13 +49,17 @@ export function DetailsStep({
         />
       </Field>
 
-      <Field label="Birthday" error={errors.birthday} hint="Used for the countdown.">
+      <Fieldset
+        label="Birthday"
+        error={errors.birthday}
+        hint="Used for the countdown."
+      >
         <DateField
           value={draft.birthday}
           invalid={Boolean(errors.birthday)}
           onChange={(birthday) => patch({ birthday })}
         />
-      </Field>
+      </Fieldset>
 
       <Field
         label="A short birthday message"

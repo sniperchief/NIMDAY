@@ -77,6 +77,43 @@ export function Field({
   );
 }
 
+/**
+ * Same look as <Field>, but a grouping element rather than a <label>.
+ *
+ * A <label> can only ever be associated with ONE control, so wrapping several
+ * inputs in it means tapping the second or third activates the first instead.
+ * Use this whenever a field is made of more than one control; each control
+ * carries its own aria-label.
+ */
+export function Fieldset({
+  label,
+  hint,
+  error,
+  children,
+  optional,
+}: {
+  label: string;
+  hint?: string;
+  error?: string;
+  optional?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div role="group" aria-label={label} className="block">
+      <span className="mb-1.5 flex items-baseline justify-between text-sm font-medium text-ink/80">
+        {label}
+        {optional && <span className="text-xs font-normal text-ink/40">optional</span>}
+      </span>
+      {children}
+      {error ? (
+        <span className="mt-1 block text-xs text-red-600">{error}</span>
+      ) : hint ? (
+        <span className="mt-1 block text-xs text-ink/45">{hint}</span>
+      ) : null}
+    </div>
+  );
+}
+
 const fieldStyle =
   "w-full rounded-xl bg-white px-3.5 py-2.5 text-sm text-ink ring-1 ring-black/10 placeholder:text-ink/35 focus:outline-none focus:ring-2 focus:ring-ink/30";
 
