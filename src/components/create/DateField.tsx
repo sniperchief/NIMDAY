@@ -1,14 +1,15 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/components/ui";
 
 /**
- * Day / month / year selector for a birthday.
+ * Birthday picker built entirely from DOM elements.
  *
- * A native `<input type="date">` renders as a cramped `mm/dd/yyyy` box on
- * mobile and puts the year last, which is the hardest part to reach for a date
- * decades in the past. Three selects are predictable on every device, use the
- * platform's own wheel picker, and make the year a single scroll.
+ * Deliberately no <select>. NIMday runs inside the Nimiq Pay webview, and
+ * embedded webviews cannot be relied on to open a native select popup — on a
+ * device where they don't, the field simply appears dead to the touch. Buttons
+ * and a rendered sheet behave identically in a browser and a webview.
  *
  * Value is the same `YYYY-MM-DD` string the rest of the app uses.
  */
@@ -30,8 +31,9 @@ const MONTHS = [
 
 const EARLIEST_YEAR = 1900;
 
+type Part = "day" | "month" | "year";
+
 function daysInMonth(year: number, month: number): number {
-  // month is 1-based; day 0 of the next month is the last day of this one.
   if (!year || !month) return 31;
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
@@ -44,19 +46,87 @@ function parse(value: string): { y: number; m: number; d: number } {
 
 function format(y: number, m: number, d: number): string {
   if (!y || !m || !d) return "";
-  return `${String(y).padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(
-    d,
-  ).padStart(2, "0")}`;
+  const pad = (n: number, w: number) => String(n).padStart(w, "0");
+  return `${pad(y, 4)}-${pad(m, 2)}-${pad(d, 2)}`;
 }
 
-const selectStyle =
-  "min-h-[48px] w-full appearance-none rounded-xl bg-white bg-[length:10px] bg-[right_0.9rem_center] bg-no-repeat px-3.5 py-2.5 text-[15px] text-ink ring-1 ring-black/10 focus:outline-none focus:ring-2 focus:ring-ink/30";
+/** Bottom sheet listing the options for one part of the date. */
+function PickerSheet({
+  title,
+  options,
+  selected,
+  onPick,
+  onClose,
+}: {
+  title: string;
+  options: { value: number; label: string }[];
+  selected: number;
+  onPick: (value: number) => void;
+  onClose: () => void;
+}) {
+  const listRef = useRef<HTMLDivElement>(null);
 
-// Inline chevron so the control looks the same on every platform.
-const chevron = {
-  backgroundImage:
-    "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23241f1a' stroke-opacity='0.45' stroke-width='1.5' stroke-linecap='round'/></svg>\")",
-};
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    // Bring the current value into view rather than always starting at the top,
+    // which matters most for the year list.
+    const el = listRef.current?.querySelector('[data-selected="true"]');
+    el?.scrollIntoView({ block: "center" });
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-3 sm:items-center"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+    >
+      <div
+        className="flex max-h-[70dvh] w-full max-w-sm animate-pop-in flex-col overflow-hidden rounded-3xl bg-white shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-black/[0.06] px-5 py-3.5">
+          <span className="text-sm font-semibold text-ink">{title}</span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="-mr-2 min-h-[40px] rounded-full px-3 text-sm text-ink/55"
+          >
+            Cancel
+          </button>
+        </div>
+
+        <div ref={listRef} className="overflow-y-auto overscroll-contain py-1">
+          {options.map((o) => {
+            const active = o.value === selected;
+            return (
+              <button
+                key={o.value}
+                type="button"
+                data-selected={active}
+                onClick={() => onPick(o.value)}
+                className={cn(
+                  "flex min-h-[48px] w-full items-center justify-between px-5 text-left text-[15px] transition",
+                  active
+                    ? "bg-black/[0.04] font-semibold text-ink"
+                    : "text-ink/80 active:bg-black/[0.04]",
+                )}
+              >
+                {o.label}
+                {active ? <span aria-hidden>✓</span> : null}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function DateField({
   value,
@@ -68,79 +138,105 @@ export function DateField({
   invalid?: boolean;
 }) {
   const { y, m, d } = parse(value);
+  const [open, setOpen] = useState<Part | null>(null);
+
   const thisYear = new Date().getUTCFullYear();
-  const years: number[] = [];
-  for (let year = thisYear; year >= EARLIEST_YEAR; year--) years.push(year);
 
   function update(next: { y?: number; m?: number; d?: number }) {
     const ny = next.y ?? y;
     const nm = next.m ?? m;
-    // Clamp the day so 31 January -> February becomes the 28th or 29th,
-    // rather than silently producing an impossible date.
+    // Clamp so 31 January -> February becomes the 28th or 29th rather than an
+    // impossible date.
     const maxDay = daysInMonth(ny, nm);
     const nd = Math.min(next.d ?? d, maxDay || 31);
     onChange(format(ny, nm, nd));
+    setOpen(null);
   }
 
-  const dayCount = daysInMonth(y, m);
+  const trigger = cn(
+    "flex min-h-[48px] w-full items-center justify-between gap-1 rounded-xl bg-white px-3.5 text-[15px] ring-1 transition active:bg-black/[0.03]",
+    invalid ? "ring-red-400" : "ring-black/10",
+  );
+
+  const dayOptions = Array.from({ length: daysInMonth(y, m) }, (_, i) => ({
+    value: i + 1,
+    label: String(i + 1),
+  }));
+  const monthOptions = MONTHS.map((label, i) => ({ value: i + 1, label }));
+  const yearOptions = Array.from(
+    { length: thisYear - EARLIEST_YEAR + 1 },
+    (_, i) => ({ value: thisYear - i, label: String(thisYear - i) }),
+  );
 
   return (
-    <div
-      className={cn(
-        "grid grid-cols-[1fr_1.4fr_1fr] gap-2",
-        invalid && "[&_select]:ring-red-400",
+    <>
+      <div className="grid grid-cols-[1fr_1.5fr_1.1fr] gap-2">
+        <button
+          type="button"
+          className={trigger}
+          onClick={() => setOpen("day")}
+          aria-label="Day"
+        >
+          <span className={d ? "text-ink" : "text-ink/40"}>{d || "Day"}</span>
+          <span aria-hidden className="text-ink/35">
+            ▾
+          </span>
+        </button>
+
+        <button
+          type="button"
+          className={trigger}
+          onClick={() => setOpen("month")}
+          aria-label="Month"
+        >
+          <span className={cn("truncate", m ? "text-ink" : "text-ink/40")}>
+            {m ? MONTHS[m - 1] : "Month"}
+          </span>
+          <span aria-hidden className="text-ink/35">
+            ▾
+          </span>
+        </button>
+
+        <button
+          type="button"
+          className={trigger}
+          onClick={() => setOpen("year")}
+          aria-label="Year"
+        >
+          <span className={y ? "text-ink" : "text-ink/40"}>{y || "Year"}</span>
+          <span aria-hidden className="text-ink/35">
+            ▾
+          </span>
+        </button>
+      </div>
+
+      {open === "day" && (
+        <PickerSheet
+          title="Day"
+          options={dayOptions}
+          selected={d}
+          onPick={(v) => update({ d: v })}
+          onClose={() => setOpen(null)}
+        />
       )}
-    >
-      <select
-        aria-label="Day"
-        className={selectStyle}
-        style={chevron}
-        value={d || ""}
-        onChange={(e) => update({ d: Number(e.target.value) })}
-      >
-        <option value="" disabled>
-          Day
-        </option>
-        {Array.from({ length: dayCount }, (_, i) => i + 1).map((n) => (
-          <option key={n} value={n}>
-            {n}
-          </option>
-        ))}
-      </select>
-
-      <select
-        aria-label="Month"
-        className={selectStyle}
-        style={chevron}
-        value={m || ""}
-        onChange={(e) => update({ m: Number(e.target.value) })}
-      >
-        <option value="" disabled>
-          Month
-        </option>
-        {MONTHS.map((name, i) => (
-          <option key={name} value={i + 1}>
-            {name}
-          </option>
-        ))}
-      </select>
-
-      <select
-        aria-label="Year"
-        className={selectStyle}
-        style={chevron}
-        value={y || ""}
-        onChange={(e) => update({ y: Number(e.target.value) })}
-      >
-        <option value="" disabled>
-          Year
-        </option>
-        {years.map((n) => (
-          <option key={n} value={n}>
-            {n}
-          </option>
-        ))}
-      </select>
-    </div>
+      {open === "month" && (
+        <PickerSheet
+          title="Month"
+          options={monthOptions}
+          selected={m}
+          onPick={(v) => update({ m: v })}
+          onClose={() => setOpen(null)}
+        />
+      )}
+      {open === "year" && (
+        <PickerSheet
+          title="Year"
+          options={yearOptions}
+          selected={y}
+          onPick={(v) => update({ y: v })}
+          onClose={() => setOpen(null)}
+        />
+      )}
+    </>
   );
 }
