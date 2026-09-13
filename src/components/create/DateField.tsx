@@ -2,6 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/components/ui";
+import {
+  daysInMonth,
+  formatDate,
+  parseDate,
+  partsForIncomingValue,
+  pickPart,
+  type DateParts,
+} from "./dateParts";
 
 /**
  * Birthday picker built entirely from DOM elements.
@@ -11,7 +19,11 @@ import { cn } from "@/components/ui";
  * device where they don't, the field simply appears dead to the touch. Buttons
  * and a rendered sheet behave identically in a browser and a webview.
  *
- * Value is the same `YYYY-MM-DD` string the rest of the app uses.
+ * Value is the same `YYYY-MM-DD` string the rest of the app uses. Because a
+ * person picks day, month and year one tap at a time, the picker holds the
+ * parts itself and only calls `onChange` once all three are chosen — a partial
+ * date has no `YYYY-MM-DD` form, and round-tripping it through the parent used
+ * to erase every pick. See dateParts.ts.
  */
 
 const MONTHS = [
@@ -33,23 +45,6 @@ const EARLIEST_YEAR = 1900;
 
 type Part = "day" | "month" | "year";
 
-function daysInMonth(year: number, month: number): number {
-  if (!year || !month) return 31;
-  return new Date(Date.UTC(year, month, 0)).getUTCDate();
-}
-
-function parse(value: string): { y: number; m: number; d: number } {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value ?? "");
-  if (!match) return { y: 0, m: 0, d: 0 };
-  return { y: Number(match[1]), m: Number(match[2]), d: Number(match[3]) };
-}
-
-function format(y: number, m: number, d: number): string {
-  if (!y || !m || !d) return "";
-  const pad = (n: number, w: number) => String(n).padStart(w, "0");
-  return `${pad(y, 4)}-${pad(m, 2)}-${pad(d, 2)}`;
-}
-
 /** Bottom sheet listing the options for one part of the date. */
 function PickerSheet({
   title,
@@ -66,15 +61,22 @@ function PickerSheet({
 }) {
   const listRef = useRef<HTMLDivElement>(null);
 
+  // Bring the current value into view once, when the sheet opens — which
+  // matters most for the year list. Scrolling the list itself rather than
+  // calling scrollIntoView, which also scrolls the page behind the sheet.
+  useEffect(() => {
+    const list = listRef.current;
+    const el = list?.querySelector<HTMLElement>('[data-selected="true"]');
+    if (list && el) {
+      list.scrollTop = el.offsetTop - list.clientHeight / 2 + el.clientHeight / 2;
+    }
+  }, []);
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
     window.addEventListener("keydown", onKey);
-    // Bring the current value into view rather than always starting at the top,
-    // which matters most for the year list.
-    const el = listRef.current?.querySelector('[data-selected="true"]');
-    el?.scrollIntoView({ block: "center" });
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
@@ -101,7 +103,7 @@ function PickerSheet({
           </button>
         </div>
 
-        <div ref={listRef} className="overflow-y-auto overscroll-contain py-1">
+        <div ref={listRef} className="relative overflow-y-auto overscroll-contain py-1">
           {options.map((o) => {
             const active = o.value === selected;
             return (
@@ -137,19 +139,28 @@ export function DateField({
   onChange: (next: string) => void;
   invalid?: boolean;
 }) {
-  const { y, m, d } = parse(value);
+  const [parts, setParts] = useState<DateParts>(() => parseDate(value));
   const [open, setOpen] = useState<Part | null>(null);
+  // The last complete date this picker handed to the parent, so its own echo
+  // is told apart from a value that arrived from outside.
+  const lastEmitted = useRef(value);
 
+  useEffect(() => {
+    setParts((current) => partsForIncomingValue(value, lastEmitted.current, current));
+    lastEmitted.current = value;
+  }, [value]);
+
+  const { y, m, d } = parts;
   const thisYear = new Date().getUTCFullYear();
 
-  function update(next: { y?: number; m?: number; d?: number }) {
-    const ny = next.y ?? y;
-    const nm = next.m ?? m;
-    // Clamp so 31 January -> February becomes the 28th or 29th rather than an
-    // impossible date.
-    const maxDay = daysInMonth(ny, nm);
-    const nd = Math.min(next.d ?? d, maxDay || 31);
-    onChange(format(ny, nm, nd));
+  function update(next: Partial<DateParts>) {
+    const picked = pickPart(parts, next);
+    setParts(picked);
+    const full = formatDate(picked);
+    if (full) {
+      lastEmitted.current = full;
+      onChange(full);
+    }
     setOpen(null);
   }
 
@@ -175,7 +186,7 @@ export function DateField({
           type="button"
           className={trigger}
           onClick={() => setOpen("day")}
-          aria-label="Day"
+          aria-label={d ? `Day, ${d}` : "Day"}
         >
           <span className={d ? "text-ink" : "text-ink/40"}>{d || "Day"}</span>
           <span aria-hidden className="text-ink/35">
@@ -187,7 +198,7 @@ export function DateField({
           type="button"
           className={trigger}
           onClick={() => setOpen("month")}
-          aria-label="Month"
+          aria-label={m ? `Month, ${MONTHS[m - 1]}` : "Month"}
         >
           <span className={cn("truncate", m ? "text-ink" : "text-ink/40")}>
             {m ? MONTHS[m - 1] : "Month"}
@@ -201,7 +212,7 @@ export function DateField({
           type="button"
           className={trigger}
           onClick={() => setOpen("year")}
-          aria-label="Year"
+          aria-label={y ? `Year, ${y}` : "Year"}
         >
           <span className={y ? "text-ink" : "text-ink/40"}>{y || "Year"}</span>
           <span aria-hidden className="text-ink/35">
