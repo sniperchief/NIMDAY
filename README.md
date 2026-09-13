@@ -116,3 +116,11 @@ No private keys, seed phrases, or wallet passwords are ever requested or stored.
 signed httpOnly cookies. Every mutation is authorised against the session's wallet address —
 creator IDs from the browser are never trusted. Auth nonces are single-use and expire.
 Secrets live only in the environment.
+
+## License
+
+The code is released under the [MIT License](LICENSE).
+
+The sample photos in `public/sample/` are from [Pexels](https://www.pexels.com) and are
+used under the [Pexels License](https://www.pexels.com/license/). They are not covered by the
+MIT License.
