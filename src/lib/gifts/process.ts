@@ -17,6 +17,12 @@ export type ProcessOutcome =
   | { result: "failed"; reason: string }
   | { result: "not_found" };
 
+/**
+ * The intent fields verification uses. `senderAddress` on the intent is only the
+ * address the giver's wallet listed when they connected — a claim, not evidence
+ * of which account pays — so it is deliberately not passed on. The real sender
+ * comes from the transaction.
+ */
 function toIntentForVerification(intent: {
   id: string;
   shortId: string;
@@ -24,7 +30,6 @@ function toIntentForVerification(intent: {
   recipientAddress: string;
   minAmountLuna: bigint;
   currency: "NIM" | "USDT";
-  senderAddress: string | null;
 }): IntentForVerification {
   return {
     id: intent.id,
@@ -33,7 +38,6 @@ function toIntentForVerification(intent: {
     recipientAddress: intent.recipientAddress,
     minAmountLuna: intent.minAmountLuna,
     currency: intent.currency,
-    senderAddress: intent.senderAddress,
   };
 }
 

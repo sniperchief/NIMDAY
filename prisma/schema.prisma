@@ -126,7 +126,9 @@ model PaymentIntent {
   shortId          String              @unique
   memo             String
   anonymous        Boolean             @default(false)
-  /// Sender address if the giver connected a wallet before paying (claim; verified).
+  /// Address the giver's wallet listed when they connected, if they did. A claim
+  /// only — never required to match the payment (a wallet may pay from another of
+  /// its accounts). Overwritten with the real on-chain sender when credited.
   senderAddress    String?
   txHash           String?
   status           PaymentIntentStatus @default(CREATED)

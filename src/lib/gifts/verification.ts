@@ -3,8 +3,8 @@
  * the on-chain transaction details, decide whether the transaction may credit
  * that intent. No database, no network — fully unit-testable.
  *
- * NIMday must never trust the frontend: every field below is checked against the
- * intent, and the recipient is checked against the address the server derived
+ * NIMday must never trust the frontend: every rule below is checked against the
+ * chain, and the recipient is checked against the address the server derived
  * from the wish's birthday's creator.
  */
 
@@ -36,6 +36,12 @@ export interface PlainTxDetails {
   data?: { type?: string; raw?: string } | null;
 }
 
+/**
+ * What verification needs from an intent. Deliberately carries no sender: the
+ * address a giver's wallet *claims* when they connect is not evidence of which
+ * account will actually pay, so it is never compared against the chain. The
+ * sender is read from the transaction and recorded on credit.
+ */
 export interface IntentForVerification {
   id: string;
   shortId: string;
@@ -43,8 +49,6 @@ export interface IntentForVerification {
   recipientAddress: string;
   minAmountLuna: bigint;
   currency: "NIM" | "USDT";
-  /** claimed sender, if the giver connected a wallet first */
-  senderAddress: string | null;
 }
 
 export { NIMIQ_MAINNET };
@@ -74,6 +78,7 @@ export type VerificationResult =
       ok: true;
       state: TxState;
       amountLuna: bigint;
+      /** the real on-chain sender, normalised — the only sender NIMday records */
       senderAddress: string;
     }
   | { ok: false; reason: VerificationFailure; retryable: boolean };
@@ -113,16 +118,16 @@ export function verifyTransaction(
     return { ok: false, reason: "wrong_recipient", retryable: false };
   }
 
-  // Sender — if the intent pinned a connected sender, it must match.
+  // Sender — must be a readable address, because it is what gets recorded. It is
+  // NOT required to match the address the giver's wallet listed on connect:
+  // Nimiq Pay's listAccounts() gives no guarantee its first entry is the account
+  // that pays, and a giver with more than one account was being refused a
+  // genuine gift. Nothing is lost by accepting any sender — the memo binds the
+  // payment to this one intent, and recipient, amount, confirmation and tx-hash
+  // uniqueness are all still enforced. Whoever paid, the creator received it.
   const gotSender = normalizeAddress(tx.sender);
   if (!gotSender) {
     return { ok: false, reason: "wrong_sender", retryable: false };
-  }
-  if (intent.senderAddress) {
-    const wantSender = normalizeAddress(intent.senderAddress);
-    if (!wantSender || wantSender !== gotSender) {
-      return { ok: false, reason: "wrong_sender", retryable: false };
-    }
   }
 
   // Memo — decoded data must carry this intent's shortId.

@@ -19,7 +19,6 @@ function intent(over: Partial<IntentForVerification> = {}): IntentForVerificatio
     recipientAddress: RECIPIENT,
     minAmountLuna: 100_000n,
     currency: "NIM",
-    senderAddress: null,
     ...over,
   };
 }
@@ -61,12 +60,52 @@ describe("verifyTransaction", () => {
     expect(r).toMatchObject({ ok: false, reason: "wrong_recipient" });
   });
 
-  it("rejects the wrong sender when the intent pins one", () => {
+  it("accepts a payment from whichever account the giver actually paid with", () => {
+    // Regression: the address a wallet lists first on connect was pinned as the
+    // required sender. A giver with several accounts in Nimiq Pay paid from a
+    // different one and a genuine gift was refused. Any account may pay.
+    for (const sender of [
+      "NQ55 1111 1111 1111 1111 1111 1111 1111 1111",
+      "NQ55 2222 2222 2222 2222 2222 2222 2222 2222",
+      "NQ55 3333 3333 3333 3333 3333 3333 3333 3333",
+    ]) {
+      const r = verifyTransaction(intent(), tx({ sender }));
+      expect(r.ok).toBe(true);
+    }
+  });
+
+  it("records the real on-chain sender, normalised", () => {
     const r = verifyTransaction(
-      intent({ senderAddress: "NQ55 2222 2222 2222 2222 2222 2222 2222 2222" }),
-      tx(),
+      intent(),
+      tx({ sender: "nq55 2222 2222 2222 2222 2222 2222 2222 2222".replace(/ /g, "") }),
     );
-    expect(r).toMatchObject({ ok: false, reason: "wrong_sender" });
+    expect(r).toMatchObject({
+      ok: true,
+      senderAddress: "NQ55 2222 2222 2222 2222 2222 2222 2222 2222",
+    });
+  });
+
+  it("rejects a transaction whose sender can't be read", () => {
+    for (const sender of ["", "not an address", "NQ55 1111"]) {
+      const r = verifyTransaction(intent(), tx({ sender }));
+      expect(r).toMatchObject({ ok: false, reason: "wrong_sender", retryable: false });
+    }
+  });
+
+  it("still ties a payment to its own intent, whoever sent it", () => {
+    // Accepting any sender must not let a payment for one gift credit another:
+    // the memo is what binds it.
+    const r = verifyTransaction(
+      intent(),
+      tx({
+        sender: "NQ55 2222 2222 2222 2222 2222 2222 2222 2222",
+        data: {
+          type: "raw",
+          raw: Buffer.from(memoFor("zzzzzzzzzzzzzz"), "utf8").toString("hex"),
+        },
+      }),
+    );
+    expect(r).toMatchObject({ ok: false, reason: "wrong_memo" });
   });
 
   it("rejects an amount below the minimum", () => {

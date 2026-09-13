@@ -47,7 +47,6 @@ describe.skipIf(!RUN)("real Nimiq mainnet client", () => {
         recipientAddress: details.recipient,
         minAmountLuna: BigInt(details.value),
         currency: "NIM",
-        senderAddress: null,
       },
       { ...details, data: { type: "raw", raw: Buffer.from(memo, "utf8").toString("hex") } },
     );

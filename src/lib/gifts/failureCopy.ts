@@ -10,7 +10,9 @@ import type { VerificationFailure } from "@/lib/gifts/verification";
 const FAILURE_COPY: Record<VerificationFailure, string> = {
   wrong_recipient:
     "We couldn't confirm this gift. The payment was sent to a different address.",
-  wrong_sender: "The payment came from a different wallet than this gift expected.",
+  // Only raised now when the transaction's sender can't be read at all; a
+  // payment from any of the giver's accounts is accepted.
+  wrong_sender: "We couldn't read which wallet that payment came from.",
   wrong_memo: "We couldn't match that payment to this gift.",
   wrong_network: "That payment wasn't on the Nimiq network we verify against.",
   wrong_currency: "Only NIM gifts are supported right now.",
