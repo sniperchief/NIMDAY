@@ -7,13 +7,13 @@ import { timeAgo } from "@/lib/activityText";
 import { ApiError, deleteMessage, type PublicMessage } from "@/lib/apiClient";
 
 /**
- * The messages on the creator's own NIMday, with the one creator action there
+ * The messages on the creator's own nimDay, with the one creator action there
  * is: remove a message from your card.
  *
  * This is deliberately not moderation — there is no hiding, reporting, editing
  * or blocking, and nothing about a sender is shown here that a visitor can't
  * already see. Removal is confirmed in place, and the server re-checks that
- * the message belongs to a NIMday this session actually owns.
+ * the message belongs to a nimDay this session actually owns.
  */
 export function MessagesCard({
   messages: initial,
@@ -103,7 +103,7 @@ export function MessagesCard({
                     · {timeAgo(m.createdAt)}
                   </span>
                   {m.gift ? (
-                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800">
+                    <span className="rounded-full bg-persimmon-soft px-2 py-0.5 text-[11px] font-medium text-ink">
                       🎁 gifted {m.gift.amountNim} NIM · {m.gift.wishTitle}
                     </span>
                   ) : null}
@@ -112,7 +112,7 @@ export function MessagesCard({
                 {confirming ? (
                   <div className="mt-3 border-t border-black/[0.06] pt-3">
                     <p className="text-sm text-ink/70">
-                      Remove this message from your NIMday? It disappears from
+                      Remove this message from your nimDay? It disappears from
                       your public page for good.
                       {m.gift
                         ? " The gift itself is untouched — only the note goes."

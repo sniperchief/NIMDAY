@@ -15,7 +15,7 @@ export const POST = route(async (req) => {
     where: { creatorId: user.id },
   });
   if (existing) {
-    return conflict("You already have a NIMday", {
+    return conflict("You already have a nimDay", {
       id: existing.id,
       slug: existing.slug,
     });

@@ -1,5 +1,5 @@
 /**
- * One canonical public URL for a NIMday, and the copy that travels with it.
+ * One canonical public URL for a nimDay, and the copy that travels with it.
  * Everything that shares a link — the public page, the dashboard, the publish
  * confirmation — goes through here so there is only ever one URL format.
  * (Nimiq Pay deep links are a separate, deliberate format: see nimiq/deepLink.)
@@ -18,9 +18,9 @@ function firstName(name: string): string {
   return name.trim().split(/\s+/)[0] || name.trim();
 }
 
-/** What the creator sends out: "here's my NIMday". */
+/** What the creator sends out: "here's my nimDay". */
 export function creatorShareText(name: string): string {
-  return `🎂 It's my birthday! I made a NIMday with a few things I'd love this year — ${firstName(
+  return `🎂 It's my birthday! I made a nimDay with a few things I'd love this year — ${firstName(
     name,
   )}`;
 }
@@ -42,7 +42,7 @@ export function sharePayload(
   audience: "creator" | "visitor",
 ): SharePayload {
   return {
-    title: "NIMday",
+    title: "nimDay",
     text: audience === "creator" ? creatorShareText(name) : visitorShareText(name),
     url,
   };

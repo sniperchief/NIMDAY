@@ -16,7 +16,7 @@ function int(name: string, fallback: number): number {
 }
 
 /**
- * The Nimiq networks NIMday knows how to run against. Anything else is a
+ * The Nimiq networks nimDay knows how to run against. Anything else is a
  * configuration mistake, not a network — we refuse it loudly rather than
  * silently rejecting every payment as "wrong network" at verification time.
  */
@@ -67,7 +67,7 @@ export const env = {
    */
   nimiqNetwork: (): NimiqNetwork => resolveNimiqNetwork(process.env.NIMIQ_NETWORK),
 
-  /** True when NIMday is pointed at test NIM, which is worth nothing. */
+  /** True when nimDay is pointed at test NIM, which is worth nothing. */
   isTestnet: (): boolean => resolveNimiqNetwork(process.env.NIMIQ_NETWORK) !== NIMIQ_MAINNET,
 
   isProd: process.env.NODE_ENV === "production",

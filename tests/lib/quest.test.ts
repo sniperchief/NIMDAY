@@ -89,7 +89,7 @@ describe("persistence", () => {
     });
   });
 
-  it("scopes storage per NIMday", () => {
+  it("scopes storage per nimDay", () => {
     expect(questStorageKey("sarah-2026")).toBe("nimday.quest.sarah-2026");
     expect(questStorageKey("a")).not.toBe(questStorageKey("b"));
   });

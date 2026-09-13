@@ -23,7 +23,7 @@ describe("encodeSignedMessage", () => {
 describe("verifyNimiqSignature", () => {
   it("verifies a real signature and derives the signer address", async () => {
     const kp = await newKeyPair();
-    const message = "Sign in to NIMday\n\nNonce: abc123";
+    const message = "Sign in to nimDay\n\nNonce: abc123";
     const Nimiq = await import("@nimiq/core");
     const sig = kp.sign(new TextEncoder().encode(message));
 

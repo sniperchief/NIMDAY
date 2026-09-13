@@ -3,7 +3,7 @@
  * the on-chain transaction details, decide whether the transaction may credit
  * that intent. No database, no network — fully unit-testable.
  *
- * NIMday must never trust the frontend: every rule below is checked against the
+ * nimDay must never trust the frontend: every rule below is checked against the
  * chain, and the recipient is checked against the address the server derived
  * from the wish's birthday's creator.
  */
@@ -78,7 +78,7 @@ export type VerificationResult =
       ok: true;
       state: TxState;
       amountLuna: bigint;
-      /** the real on-chain sender, normalised — the only sender NIMday records */
+      /** the real on-chain sender, normalised — the only sender nimDay records */
       senderAddress: string;
     }
   | { ok: false; reason: VerificationFailure; retryable: boolean };

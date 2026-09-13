@@ -5,13 +5,13 @@ import { env } from "@/lib/env";
 export const metadata: Metadata = {
   metadataBase: new URL(env.appOrigin),
   title: {
-    default: "NIMday — Your birthday. Your wishes. One beautiful link.",
-    template: "%s · NIMday",
+    default: "nimDay — Your birthday. Your wishes. One beautiful link.",
+    template: "%s · nimDay",
   },
   description:
     "Make a beautiful birthday page, add a few wishes, and share one link with the people who want to celebrate you.",
   openGraph: {
-    siteName: "NIMday",
+    siteName: "nimDay",
     type: "website",
   },
 };
@@ -24,7 +24,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#fbf7f0",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({
@@ -32,7 +32,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className="min-h-dvh bg-cream text-ink antialiased">{children}</body>
+      <body className="min-h-dvh bg-white text-ink antialiased">{children}</body>
     </html>
   );
 }

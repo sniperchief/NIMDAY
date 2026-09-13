@@ -1,14 +1,15 @@
 import * as React from "react";
-import { getTheme } from "@/lib/themes";
+import { getTheme, type Theme } from "@/lib/themes";
 import { cn } from "@/components/ui";
 import { ThemeMotif } from "@/components/ThemeMotif";
-import { Countdown } from "@/components/Countdown";
+import { DateTile } from "@/components/DateTile";
 
 export interface BirthdayCardData {
   name: string;
   birthday: string;
   message: string | null;
-  theme: string;
+  /** a saved theme id, or a theme object */
+  theme: string | Theme;
   imageUrl: string | null;
 }
 
@@ -24,12 +25,16 @@ function initials(name: string): string {
 }
 
 /**
- * The card itself: photo, name, countdown, message. Nothing about money.
+ * The card itself: photo, name, date, message. Nothing about money.
  *
  * This is the first thing a visitor sees, and it has one job — say *whose*
  * birthday it is. Wishes, gifting, messages and the quest are separate sections
  * rendered underneath (or passed as `children`), so the page reads as a
  * birthday card first and a wishlist second.
+ *
+ * One design everywhere: the homepage sample, the creator's preview and the
+ * public page render this same card, so the homepage shows exactly what people
+ * get.
  */
 export function BirthdayCard({
   data,
@@ -49,7 +54,7 @@ export function BirthdayCard({
     <article
       className={cn(
         "relative overflow-hidden rounded-[28px] ring-1 ring-black/5",
-        "shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)]",
+        "shadow-[0_60px_120px_-30px_rgba(36,31,26,0.5),0_28px_56px_-28px_rgba(36,31,26,0.35)]",
         theme.card,
         theme.text,
         className,
@@ -98,11 +103,7 @@ export function BirthdayCard({
             {data.name || "Someone special"}
           </h1>
 
-          <Countdown
-            name={data.name || "the"}
-            birthdayISO={data.birthday}
-            className={cn("mt-4", theme.accent, theme.accentText)}
-          />
+          <DateTile birthdayISO={data.birthday} theme={theme} className="mt-4" />
 
           {data.message ? (
             <p

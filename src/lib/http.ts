@@ -21,7 +21,7 @@ export const badRequest = (message = "Invalid request", extra?: Record<string, u
   fail(400, "bad_request", message, extra);
 export const unauthorized = (message = "Sign in to continue") =>
   fail(401, "unauthorized", message);
-export const forbidden = (message = "You can't edit this NIMday") =>
+export const forbidden = (message = "You can't edit this nimDay") =>
   fail(403, "forbidden", message);
 export const notFound = (message = "Not found") => fail(404, "not_found", message);
 export const conflict = (message: string, extra?: Record<string, unknown>) =>

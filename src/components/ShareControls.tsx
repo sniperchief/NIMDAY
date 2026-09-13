@@ -81,7 +81,7 @@ export function ShareSection({
       )}
     >
       <h2 className="font-display text-xl text-ink">
-        {title ?? (audience === "creator" ? "Share your NIMday" : "Share the celebration")}
+        {title ?? (audience === "creator" ? "Share your nimDay" : "Share the celebration")}
       </h2>
       <p className="mx-auto mt-1 max-w-xs text-sm text-ink/60">
         {subtitle ??

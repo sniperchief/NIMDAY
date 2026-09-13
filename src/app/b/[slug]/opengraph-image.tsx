@@ -2,7 +2,7 @@ import { getPublishedBirthdayBySlug, toPublicBirthday } from "@/lib/birthday";
 import { getTheme, THEMES } from "@/lib/themes";
 import { countdownLabel } from "@/lib/countdown";
 
-export const alt = "A NIMday birthday card";
+export const alt = "A nimDay birthday card";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/svg+xml";
 
@@ -22,7 +22,7 @@ export default async function OpengraphImage({ params }: Params) {
   const b = await getPublishedBirthdayBySlug(slug);
   const pub = b ? toPublicBirthday(b) : null;
   const theme = getTheme(b?.theme ?? THEMES.confetti.id);
-  const name = esc(pub?.name ?? "NIMday");
+  const name = esc(pub?.name ?? "nimDay");
   const line = esc(
     pub
       ? countdownLabel(pub.name, {
@@ -42,7 +42,7 @@ export default async function OpengraphImage({ params }: Params) {
       <stop offset="1" stop-color="${c1}" stop-opacity="0.28"/>
     </linearGradient>
   </defs>
-  <rect width="1200" height="630" fill="#fbf7f0"/>
+  <rect width="1200" height="630" fill="#ffffff"/>
   <rect width="1200" height="630" fill="url(#bg)"/>
   <g>
     <circle cx="150" cy="110" r="10" fill="${c0}"/>
@@ -57,7 +57,7 @@ export default async function OpengraphImage({ params }: Params) {
     <rect x="360" y="380" width="480" height="60" rx="30" fill="${accent}"/>
     <text x="600" y="419" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" fill="#ffffff">${line}</text>
   </g>
-  <text x="600" y="560" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#6b6157">made with NIMday</text>
+  <text x="600" y="560" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#6b6157">made with nimDay</text>
 </svg>`;
 
   return new Response(svg, {

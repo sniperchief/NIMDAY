@@ -72,7 +72,7 @@ describe("creator flow: create → publish → public view", () => {
     expect(pub.wishes.map((w) => w.title)).toEqual(["Headphones", "Book"]);
   });
 
-  it("rejects a second NIMday for the same creator (409)", async () => {
+  it("rejects a second nimDay for the same creator (409)", async () => {
     currentUser.mockResolvedValue(OWNER);
     await createBirthday(jsonReq(validBirthday));
     const res = await createBirthday(jsonReq(validBirthday));
@@ -111,7 +111,7 @@ describe("creator flow: create → publish → public view", () => {
     expect(res.status).toBe(403);
   });
 
-  it("won't publish an incomplete NIMday", async () => {
+  it("won't publish an incomplete nimDay", async () => {
     currentUser.mockResolvedValue(OWNER);
     // create with an invalid wish sneaked straight into the store
     const created = (

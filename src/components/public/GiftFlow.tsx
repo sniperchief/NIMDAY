@@ -23,7 +23,7 @@ import {
 } from "@/lib/apiClient";
 
 /**
- * Shown only when NIMday is pointed at a test network. On mainnet nothing
+ * Shown only when nimDay is pointed at a test network. On mainnet nothing
  * renders, so the gift flow stays free of chain talk — but a demo on testnet
  * can never be mistaken for real money moving.
  */
@@ -31,7 +31,7 @@ function TestnetNotice({ show }: { show: boolean }) {
   if (!show) return null;
   return (
     <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900 ring-1 ring-amber-200">
-      <span className="font-semibold">Test network.</span> This NIMday is running
+      <span className="font-semibold">Test network.</span> This nimDay is running
       on Nimiq testnet — the NIM sent here is test NIM and has no value.
     </p>
   );
@@ -64,7 +64,7 @@ export function GiftFlow({
   origin: string;
   birthdayName: string;
   wishes: PublicWish[];
-  /** NIMday is pointed at a test network — never hide that from a giver */
+  /** nimDay is pointed at a test network — never hide that from a giver */
   testnet: boolean;
   open: boolean;
   initialWishId: string | null;
@@ -403,7 +403,7 @@ export function GiftFlow({
                 className="h-4 w-4 rounded"
               />
               Give anonymously
-              <span className="text-xs text-ink/40">(hidden in NIMday, not on-chain)</span>
+              <span className="text-xs text-ink/40">(hidden in nimDay, not on-chain)</span>
             </label>
 
             <TestnetNotice show={onTestnet} />
@@ -548,7 +548,7 @@ export function GiftFlow({
           <div className="space-y-4 py-2 text-center" role="status" aria-live="polite">
             <div
               aria-hidden
-              className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-3xl"
+              className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-persimmon-soft text-3xl"
             >
               🎁
             </div>
@@ -557,7 +557,7 @@ export function GiftFlow({
               <p className="mt-1 text-sm text-ink/65">
                 You sent {status?.confirmedGift?.amountNim ?? amountNim} NIM to{" "}
                 {birthdayName} for “{status?.wishTitle ?? wishTitle}”.
-                {status?.anonymous ? " Your name stays hidden in NIMday." : ""}
+                {status?.anonymous ? " Your name stays hidden in nimDay." : ""}
               </p>
             </div>
             <div className="flex flex-col gap-2">

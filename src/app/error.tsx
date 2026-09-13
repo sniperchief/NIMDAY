@@ -23,7 +23,7 @@ export default function ErrorBoundary({
   }, [error]);
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-cream px-6 text-center">
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-white px-6 text-center">
       <div className="text-4xl">🎈</div>
       <h1 className="mt-4 font-display text-2xl text-ink">
         Something went wrong at our end
@@ -43,7 +43,7 @@ export default function ErrorBoundary({
           href="/"
           className="rounded-full bg-white px-5 py-2.5 text-sm font-medium text-ink ring-1 ring-black/10"
         >
-          Back to NIMday
+          Back to nimDay
         </Link>
       </div>
       {error.digest ? (

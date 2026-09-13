@@ -39,7 +39,7 @@ export function PublicBirthdayView({
   intentParam: string | null;
   initialMessages: PublicMessage[];
   initialMessageCount: number;
-  /** server-known: NIMday is pointed at test NIM, so the gift flow says so */
+  /** server-known: nimDay is pointed at test NIM, so the gift flow says so */
   testnet: boolean;
 }) {
   const theme = getTheme(pub.theme);
@@ -174,7 +174,7 @@ export function PublicBirthdayView({
           </div>
         ) : (
           <p className={cn("text-center text-sm", theme.muted)}>
-            No wishes on this NIMday — but a message would still make their day.
+            No wishes on this nimDay — but a message would still make their day.
           </p>
         )}
       </BirthdayCard>
@@ -204,14 +204,14 @@ export function PublicBirthdayView({
         name={pub.name}
         audience="visitor"
         tone="light"
-        title={`Share ${firstName}'s NIMday`}
+        title={`Share ${firstName}'s nimDay`}
         subtitle="Someone else would love to wish them happy birthday too."
       />
 
       <p className="pb-2 pt-1 text-center text-xs text-black/40">
         Made with{" "}
         <a href={origin} className="font-medium underline">
-          NIMday
+          nimDay
         </a>{" "}
         · your own birthday page takes a minute
       </p>

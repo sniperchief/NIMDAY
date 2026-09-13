@@ -14,7 +14,7 @@ import {
 /**
  * Birthday picker built entirely from DOM elements.
  *
- * Deliberately no <select>. NIMday runs inside the Nimiq Pay webview, and
+ * Deliberately no <select>. nimDay runs inside the Nimiq Pay webview, and
  * embedded webviews cannot be relied on to open a native select popup — on a
  * device where they don't, the field simply appears dead to the touch. Buttons
  * and a rendered sheet behave identically in a browser and a webview.

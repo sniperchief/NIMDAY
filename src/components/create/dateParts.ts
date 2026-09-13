@@ -58,7 +58,7 @@ export function pickPart(current: DateParts, next: Partial<DateParts>): DatePart
  *
  * If the new value is just the picker's own last `onChange` coming back, keep
  * the local parts — this is what stops a half-finished pick from being wiped.
- * Anything else came from outside (a saved NIMday loading after mount, or the
+ * Anything else came from outside (a saved nimDay loading after mount, or the
  * draft being reset), so adopt it.
  */
 export function partsForIncomingValue(

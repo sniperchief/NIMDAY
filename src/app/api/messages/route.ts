@@ -7,10 +7,10 @@ import { checkRateLimit, clientKey, isDuplicateSubmission } from "@/lib/rateLimi
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_PER_WINDOW = 5;
 
-/** Messages on a published NIMday. Public — no wallet, no account. */
+/** Messages on a published nimDay. Public — no wallet, no account. */
 export const GET = route(async (req) => {
   const slug = new URL(req.url).searchParams.get("slug");
-  if (!slug) return badRequest("Which NIMday?");
+  if (!slug) return badRequest("Which nimDay?");
   const { messages, total } = await listMessagesBySlug(slug);
   return ok({ messages, total });
 });

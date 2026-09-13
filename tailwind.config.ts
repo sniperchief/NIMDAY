@@ -15,6 +15,18 @@ const config: Config = {
       colors: {
         cream: "#fbf7f0",
         ink: "#241f1a",
+        /**
+         * nimDay brand colour. Contrast, measured (WCAG):
+         *  DEFAULT  large text and shapes only — 3.17:1 on cream, 3.39:1 on
+         *           white. Small text ON it must be ink (4.82:1), never white.
+         *  deep     small persimmon text — 4.79:1 on cream, 5.12:1 on white.
+         *  soft     a pale wash for backgrounds.
+         */
+        persimmon: {
+          DEFAULT: "#EF5B2B",
+          deep: "#C63E15",
+          soft: "#FDEDE4",
+        },
       },
       keyframes: {
         "fade-up": {

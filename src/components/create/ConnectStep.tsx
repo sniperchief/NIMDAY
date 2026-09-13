@@ -73,7 +73,7 @@ export function ConnectStep({
             {authedAddress}
           </p>
           <p className="mt-2 text-xs text-emerald-700">
-            Gifts from your NIMday will arrive straight to this wallet.
+            Gifts from your nimDay will arrive straight to this wallet.
           </p>
         </div>
         <div className="flex justify-end">
@@ -91,7 +91,7 @@ export function ConnectStep({
         <h3 className="font-medium text-ink">First, connect your Nimiq wallet</h3>
         <p className="mt-1 text-sm text-ink/60">
           You&apos;ll approve a signature in Nimiq Pay. No transaction, no fees.
-          This proves the wallet is yours, so only you can edit this NIMday and
+          This proves the wallet is yours, so only you can edit this nimDay and
           gifts arrive straight to you.
         </p>
       </div>

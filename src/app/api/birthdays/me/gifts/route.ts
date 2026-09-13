@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/auth/currentUser";
 import { getOwnBirthday } from "@/lib/birthday";
 import { getGiftActivity } from "@/lib/gifts/activity";
 
-/** Gift activity for the authenticated creator's own NIMday. */
+/** Gift activity for the authenticated creator's own nimDay. */
 export const GET = route(async () => {
   const user = await getCurrentUser();
   if (!user) return unauthorized();

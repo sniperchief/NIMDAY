@@ -108,7 +108,7 @@ export const getMe = () =>
 export const logout = () => api("/api/auth/logout", { method: "POST" });
 
 /* ---- birthday ---- */
-/** Null when there is no NIMday yet *or* nobody is signed in — both mean "nothing to load". */
+/** Null when there is no nimDay yet *or* nobody is signed in — both mean "nothing to load". */
 export const getMyBirthday = () =>
   api<{ birthday: EditorBirthday | null }>("/api/birthdays/me")
     .then((d) => d.birthday)
@@ -223,14 +223,14 @@ export const postMessage = (input: {
     body: JSON.stringify(input),
   }).then((d) => d.message);
 
-/** Remove a message from your own NIMday. Creator-only, enforced server-side. */
+/** Remove a message from your own nimDay. Creator-only, enforced server-side. */
 export const deleteMessage = (id: string) =>
   api<{ deleted: { id: string } }>(`/api/messages/${encodeURIComponent(id)}`, {
     method: "DELETE",
   }).then((d) => d.deleted);
 
 /* ---- creator dashboard (Phase 3) ---- */
-/** Null when signed out or there's no NIMday yet — both mean "nothing to show". */
+/** Null when signed out or there's no nimDay yet — both mean "nothing to show". */
 export const getDashboard = () =>
   api<{ dashboard: CreatorDashboard | null }>("/api/birthdays/me/dashboard")
     .then((d) => d.dashboard)

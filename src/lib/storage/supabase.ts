@@ -8,12 +8,12 @@ import { ACCEPTED_IMAGE_TYPES } from "@/lib/storage/types";
  *
  * Talks to the Storage REST API with `fetch` rather than pulling in
  * `@supabase/supabase-js` — this needs two calls, and the SDK would be a large
- * dependency for them. NIMday stores nothing else in Supabase Storage: images
+ * dependency for them. nimDay stores nothing else in Supabase Storage: images
  * only, uploaded by an authenticated creator, size- and type-checked by the
  * upload route before they reach here.
  *
  * The bucket is expected to be **public-read**, so `put` returns the CDN URL and
- * the browser fetches images straight from Supabase — no NIMday function
+ * the browser fetches images straight from Supabase — no nimDay function
  * invocation per image. `get` is kept for interface parity (and for a private
  * bucket) but nothing calls it in that configuration.
  *

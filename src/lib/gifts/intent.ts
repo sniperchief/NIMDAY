@@ -35,7 +35,7 @@ export interface PaymentIntentView {
   wishId: string;
   wishTitle: string;
   deepLink: string;
-  /** true when NIMday is pointed at test NIM — the UI says so, loudly */
+  /** true when nimDay is pointed at test NIM — the UI says so, loudly */
   testnet: boolean;
 }
 
@@ -52,7 +52,7 @@ export interface PaymentStatusView {
   txHash: string | null;
   failureReason: string | null;
   confirmedGift: { amountNim: string; confirmedAt: string } | null;
-  /** true when NIMday is pointed at test NIM — the UI says so, loudly */
+  /** true when nimDay is pointed at test NIM — the UI says so, loudly */
   testnet: boolean;
   /** present only while the intent is still payable — the data needed to send */
   payContext: {
@@ -76,7 +76,7 @@ export async function createPaymentIntent(
     include: { creator: true, wishes: true },
   });
   if (!birthday || !birthday.published) {
-    throw notFound("That NIMday isn't available");
+    throw notFound("That nimDay isn't available");
   }
 
   const wish = birthday.wishes.find((w) => w.id === input.wishId);
@@ -87,7 +87,7 @@ export async function createPaymentIntent(
 
   const recipientAddress = normalizeAddress(birthday.creator.walletAddress);
   if (!recipientAddress) {
-    throw badRequest("This NIMday can't receive gifts yet");
+    throw badRequest("This nimDay can't receive gifts yet");
   }
 
   let amountLuna: bigint;

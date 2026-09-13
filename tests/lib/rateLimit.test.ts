@@ -66,7 +66,7 @@ describe("clientKey", () => {
     expect(clientKey(req({}), "m")).toBe("m:unknown");
   });
 
-  it("separates the same client on different NIMdays", () => {
+  it("separates the same client on different nimDays", () => {
     const h = { "x-forwarded-for": "1.2.3.4" };
     expect(clientKey(req(h), "message:a")).not.toBe(clientKey(req(h), "message:b"));
   });

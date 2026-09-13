@@ -210,11 +210,11 @@ export function CreateWizard() {
       <div className="mx-auto max-w-xl space-y-6">
         <Card>
           <div className="text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-2xl">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-persimmon-soft text-2xl">
               🎉
             </div>
             <h2 className="mt-3 font-display text-2xl text-ink">
-              Your NIMday is live
+              Your nimDay is live
             </h2>
             <p className="mt-1 text-sm text-ink/60">
               Share this link with the people who want to celebrate you.
@@ -234,7 +234,7 @@ export function CreateWizard() {
 
           <div className="mt-4 flex flex-wrap items-center justify-center gap-4">
             <Link href="/dashboard" className="text-sm font-medium text-ink underline">
-              Open My NIMday →
+              Open My nimDay →
             </Link>
             <a
               href={publishUrl}
@@ -282,7 +282,7 @@ export function CreateWizard() {
                   active
                     ? "bg-ink text-cream"
                     : done
-                      ? "bg-emerald-500 text-white"
+                      ? "bg-persimmon-deep text-white"
                       : "bg-black/10 text-ink/50",
                 )}
               >
@@ -344,13 +344,13 @@ export function CreateWizard() {
         {step === "preview" && (
           <div className="space-y-5">
             <div>
-              <h3 className="font-medium text-ink">Here&apos;s your NIMday</h3>
+              <h3 className="font-medium text-ink">Here&apos;s your nimDay</h3>
               <p className="mt-1 text-sm text-ink/60">
                 This is exactly what visitors will see.
               </p>
             </div>
 
-            <div className="rounded-2xl bg-black/[0.03] p-3">
+            <div className="px-1 pb-8 pt-2">
               <BirthdayCard data={previewData} compact>
                 <WishList wishes={previewWishes} theme={draft.theme} />
               </BirthdayCard>
@@ -397,7 +397,7 @@ export function CreateWizard() {
                 onClick={finishPublish}
                 className="w-full sm:w-auto"
               >
-                Publish NIMday
+                Publish nimDay
               </Button>
             </div>
           </div>
@@ -406,13 +406,13 @@ export function CreateWizard() {
 
       {birthday?.published && step !== "done" && publishUrl && (
         <p className="mt-4 text-center text-xs text-ink/50">
-          Your NIMday is already published at{" "}
+          Your nimDay is already published at{" "}
           <Link href={publishUrl} className="underline">
             {prettyUrl(publishUrl)}
           </Link>
           . Publishing again will update it.{" "}
           <Link href="/dashboard" className="font-medium underline">
-            Open My NIMday
+            Open My nimDay
           </Link>
         </p>
       )}

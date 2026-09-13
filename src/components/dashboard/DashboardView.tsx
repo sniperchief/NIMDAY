@@ -30,7 +30,7 @@ function Stat({ value, label }: { value: string; label: string }) {
 }
 
 /**
- * "My NIMday" — the creator's own page. Every number here comes from the same
+ * "My nimDay" — the creator's own page. Every number here comes from the same
  * verified gift ledger the public page reads; nothing on this screen is a
  * second source of truth for money.
  */
@@ -67,7 +67,7 @@ export function DashboardView({ data }: { data: CreatorDashboard }) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs uppercase tracking-[0.14em] text-ink/45">
-                My NIMday
+                My nimDay
               </p>
               <h1 className="truncate font-display text-2xl text-ink">
                 {overview.name}
@@ -79,12 +79,14 @@ export function DashboardView({ data }: { data: CreatorDashboard }) {
                 )}
               </p>
             </div>
+            {/* Published is a brand moment; Draft is neutral, so it is never
+                mistaken for a warning. White on deep persimmon reads at 5.12:1. */}
             <span
               className={cn(
                 "flex-none self-start rounded-full px-2.5 py-1 text-xs font-medium",
                 overview.published
-                  ? "bg-emerald-100 text-emerald-800"
-                  : "bg-amber-100 text-amber-800",
+                  ? "bg-persimmon-deep text-white"
+                  : "bg-black/[0.05] text-ink/70",
               )}
             >
               {overview.published ? "Published" : "Draft"}
@@ -93,7 +95,7 @@ export function DashboardView({ data }: { data: CreatorDashboard }) {
 
           {overview.testnet ? (
             <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900 ring-1 ring-amber-200">
-              <span className="font-semibold">Test network.</span> This NIMday is
+              <span className="font-semibold">Test network.</span> This nimDay is
               running on Nimiq testnet — any gift shown below is test NIM and has
               no value.
             </p>
@@ -136,7 +138,7 @@ export function DashboardView({ data }: { data: CreatorDashboard }) {
         <Card>
           <h2 className="font-display text-xl text-ink">Not shared yet</h2>
           <p className="mt-1 text-sm text-ink/60">
-            Publish your NIMday to get your link — that&apos;s the part you send to
+            Publish your nimDay to get your link — that&apos;s the part you send to
             friends.
           </p>
           <Link href="/create" className="mt-4 inline-block">
@@ -172,7 +174,7 @@ export function DashboardView({ data }: { data: CreatorDashboard }) {
                   </p>
                   <p className="flex-none text-xs text-ink/55">
                     {w.fulfilled ? (
-                      <span className="font-semibold text-emerald-700">
+                      <span className="font-semibold text-persimmon-deep">
                         🎉 fulfilled
                       </span>
                     ) : (

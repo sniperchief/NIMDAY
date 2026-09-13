@@ -68,7 +68,7 @@ function MessageNote({
 
 /**
  * "Leave a birthday message" — the second thing a visitor can do, and the one
- * that needs no wallet at all. Anonymous hides the name in NIMday; it is not
+ * that needs no wallet at all. Anonymous hides the name in nimDay; it is not
  * on-chain anonymity, and the toggle says so.
  */
 export function MessageBoard({
@@ -229,7 +229,7 @@ export function MessageBoard({
           </div>
           {anonymous ? (
             <p className="mt-1 text-xs text-ink/45">
-              Your name stays hidden inside NIMday. If you also send a gift, that
+              Your name stays hidden inside nimDay. If you also send a gift, that
               payment is still public on the Nimiq blockchain.
             </p>
           ) : null}

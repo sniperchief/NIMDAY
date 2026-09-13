@@ -189,7 +189,7 @@ export async function requireOwnedBirthday(
     where: { id: birthdayId },
     include: EDITOR_INCLUDE,
   });
-  if (!b) throw notFound("That NIMday doesn't exist");
+  if (!b) throw notFound("That nimDay doesn't exist");
   if (b.creatorId !== userId) throw forbidden();
   return b;
 }

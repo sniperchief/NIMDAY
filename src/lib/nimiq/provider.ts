@@ -114,7 +114,7 @@ export async function signMessage(
 }
 
 /**
- * Send a NIM gift with the NIMday memo attached. The returned value is run
+ * Send a NIM gift with the nimDay memo attached. The returned value is run
  * through the isolated `parseSendResult` adapter (see txResult.ts).
  */
 export async function sendGiftTransaction(params: {

@@ -5,7 +5,7 @@
  * It creates a real payment intent and then feeds the REAL verification + credit
  * code a synthetic confirmed transaction (exactly what the worker would do).
  *
- *   npm run dev:gift            2 NIM to the newest NIMday's first wish
+ *   npm run dev:gift            2 NIM to the newest nimDay's first wish
  *   npm run dev:gift 5          5 NIM
  *   npm run dev:gift 5 anon     5 NIM, anonymous
  *
@@ -62,7 +62,7 @@ const anonymous = rawFlag === "anon";
     include: { wishes: { orderBy: { sortOrder: "asc" } } },
   });
   if (!birthday) {
-    die("No published NIMday yet — create and publish one at /create first.");
+    die("No published nimDay yet — create and publish one at /create first.");
   }
   if (birthday.wishes.length === 0) {
     die(`"${birthday.name}" has no wishes yet — add one and publish again.`);

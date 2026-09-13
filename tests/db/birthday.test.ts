@@ -47,7 +47,7 @@ describe.skipIf(!HAS_DB)("birthday persistence", () => {
     await prisma.$disconnect();
   }
 
-  it("enforces one NIMday per creator", async () => {
+  it("enforces one nimDay per creator", async () => {
     const u = await makeUser("NQ01 TEST 0000 0000 0000 0000 0000 0000 0001");
     await prisma.birthday.create({
       data: { creatorId: u.id, slug: "a-1", name: "A", birthday: new Date("2000-01-01") },

@@ -159,7 +159,7 @@ export function friendlyWalletMessage(code: WalletErrorCode): string {
 
 /**
  * Friendly text, plus the wallet's own words when we don't recognise what it
- * said. NIMday runs inside a webview where nobody can open a console, so for
+ * said. nimDay runs inside a webview where nobody can open a console, so for
  * the two codes that mean "we have never seen this" the raw detail is the only
  * way anyone finds out what happened.
  */

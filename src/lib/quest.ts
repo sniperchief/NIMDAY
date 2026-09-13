@@ -88,7 +88,7 @@ export function questLabel(p: QuestProgress): string {
   return p.done ? "Birthday Quest complete" : `${p.completed} / ${p.total} completed`;
 }
 
-/** Per-NIMday, per-device storage key. Progress never leaves the browser. */
+/** Per-nimDay, per-device storage key. Progress never leaves the browser. */
 export function questStorageKey(slug: string): string {
   return `nimday.quest.${slug}`;
 }

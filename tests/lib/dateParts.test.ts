@@ -3,7 +3,7 @@
  *
  * Regression: the picker used to keep day/month/year only inside the parent's
  * `YYYY-MM-DD` string. A partial date formats to "", so every single tap was
- * handed to the parent as "" and erased — on a new NIMday no date could ever be
+ * handed to the parent as "" and erased — on a new nimDay no date could ever be
  * chosen, in any order. These tests replay that exact one-tap-at-a-time flow,
  * including the parent echoing each value back.
  */
@@ -45,7 +45,7 @@ function replay(taps: Partial<DateParts>[], startValue = "") {
 }
 
 describe("birthday picker — choosing a date one tap at a time", () => {
-  it("keeps each pick on a new NIMday, and completes on the last one", () => {
+  it("keeps each pick on a new nimDay, and completes on the last one", () => {
     const trail = replay([{ d: 14 }, { m: 3 }, { y: 1996 }]);
 
     // the pick survives even though the draft can't hold it yet
@@ -88,7 +88,7 @@ describe("birthday picker — choosing a date one tap at a time", () => {
 
 describe("birthday picker — values arriving from outside", () => {
   it("adopts a saved date that loads after the picker mounts", () => {
-    // mounted with an empty draft, then CreateWizard loads the existing NIMday
+    // mounted with an empty draft, then CreateWizard loads the existing nimDay
     const parts = partsForIncomingValue("1996-03-14", "", EMPTY_PARTS);
     expect(parts).toEqual({ y: 1996, m: 3, d: 14 });
   });

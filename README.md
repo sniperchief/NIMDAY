@@ -1,4 +1,4 @@
-# NIMday
+# nimDay
 
 > Your birthday. Your wishes. One beautiful link.
 
@@ -34,7 +34,7 @@ docker compose up -d db       # A) real Postgres
 npm run db:dev                # B) zero-infra PGlite (see .env.example for the DATABASE_URL flags)
 
 npm run db:push               # apply the schema
-npm run db:seed               # optional: a demo NIMday at /b/demo-nimday
+npm run db:seed               # optional: a demo nimDay at /b/demo-nimday
 
 npm run dev                   # http://localhost:3000
 npm run worker                # in a second shell — the verification worker
@@ -69,7 +69,7 @@ src/
   app/
     page.tsx                landing
     create/                 creator wizard (details → wishes → connect → preview → publish)
-    dashboard/              "My NIMday" — overview, gift summary, activity (SSR, session-scoped)
+    dashboard/              "My nimDay" — overview, gift summary, activity (SSR, session-scoped)
     b/[slug]/               public birthday page (SSR) + opengraph-image + not-found
     api/
       auth/                 nonce · verify · me · logout · dev-login

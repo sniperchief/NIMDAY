@@ -205,7 +205,7 @@ export function WishesStep({
                   {w.targetAmount || "0"} NIM · {GIFT_TYPE_LABEL[w.giftType]}
                 </p>
                 {gifted(w) ? (
-                  <p className="mt-0.5 text-xs font-medium text-emerald-700">
+                  <p className="mt-0.5 text-xs font-medium text-persimmon-deep">
                     🎁 {w.raisedNim ?? "0"} NIM received — can&apos;t be removed
                   </p>
                 ) : null}

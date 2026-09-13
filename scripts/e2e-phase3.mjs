@@ -3,9 +3,9 @@
  * dev server: creator flow -> public page -> messages -> gifting regression ->
  * creator dashboard -> authorization.
  *
- * It needs `ALLOW_DEV_LOGIN=1` and a database with no NIMday for the dev wallet
+ * It needs `ALLOW_DEV_LOGIN=1` and a database with no nimDay for the dev wallet
  * (the dev-login route always signs in as the same fixed test wallet, and there
- * is one NIMday per wallet), so reset the dev database first:
+ * is one nimDay per wallet), so reset the dev database first:
  *
  *   npm run db:dev                       # shell 1
  *   npx prisma db push --force-reset     # shell 2 — DESTROYS local dev data
@@ -86,7 +86,7 @@ const run = async () => {
       ],
     }),
   });
-  check("creator creates a NIMday with wishes", created.status === 201, `status ${created.status}`);
+  check("creator creates a nimDay with wishes", created.status === 201, `status ${created.status}`);
   const birthday = created.body?.data?.birthday;
   const slug = birthday?.slug;
   const wishId = birthday?.wishes?.[0]?.id;
@@ -111,7 +111,7 @@ const run = async () => {
   const dashPage = await html("/dashboard");
   check(
     "dashboard page renders for the signed-in creator",
-    dashPage.status === 200 && dashPage.text.includes("My NIMday"),
+    dashPage.status === 200 && dashPage.text.includes("My nimDay"),
   );
 
   /* ---------- public page, as a visitor with no session ---------- */
@@ -374,7 +374,7 @@ const run = async () => {
   const dashHtml = await html("/dashboard");
   check(
     "dashboard page renders the numbers and the share block",
-    dashHtml.text.includes("Share your NIMday") &&
+    dashHtml.text.includes("Share your nimDay") &&
       dashHtml.text.includes("Headphones") &&
       dashHtml.text.includes("gifted"),
   );
@@ -408,7 +408,7 @@ const run = async () => {
 
   const removed = await api(`/api/messages/${doomedId}`, { method: "DELETE" });
   check(
-    "the creator deletes a message from their own NIMday",
+    "the creator deletes a message from their own nimDay",
     removed.status === 200 && removed.body.data.deleted.id === doomedId,
     `status ${removed.status}`,
   );
@@ -494,7 +494,7 @@ const run = async () => {
   });
   const onTestnet = netIntent.body.data.intent.testnet;
   check(
-    "the payment API always states which network this NIMday runs on",
+    "the payment API always states which network this nimDay runs on",
     typeof onTestnet === "boolean",
     `testnet=${onTestnet}`,
   );
@@ -521,11 +521,11 @@ const run = async () => {
   check(
     "signed-out /dashboard shows a sign-in prompt, not someone's data",
     signedOutPage.status === 200 &&
-      signedOutPage.text.includes("Sign in to see your NIMday") &&
+      signedOutPage.text.includes("Sign in to see your nimDay") &&
       !signedOutPage.text.includes("Sarah Chen"),
   );
 
-  /* ---------- unpublished NIMday ---------- */
+  /* ---------- unpublished nimDay ---------- */
   cookie = savedCookie;
   await api(`/api/birthdays/${birthday.id}`, {
     method: "PATCH",

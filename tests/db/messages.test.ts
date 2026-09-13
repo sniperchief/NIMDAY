@@ -211,7 +211,7 @@ describe.skipIf(!HAS_DB)("birthday messages", () => {
     expect(res.status).toBe(400);
   });
 
-  it("won't post to an unpublished NIMday", async () => {
+  it("won't post to an unpublished nimDay", async () => {
     await prisma.birthday.update({ where: { id: birthdayId }, data: { published: false } });
     const res = await messagesRoute.POST(post({ slug, body: "Happy birthday!" }));
     expect(res.status).toBe(404);
@@ -269,7 +269,7 @@ describe.skipIf(!HAS_DB)("birthday messages", () => {
     expect((await res.json()).data.message.gift).toBeNull();
   });
 
-  it("ignores an intent that isn't confirmed, isn't this NIMday's, or doesn't exist", async () => {
+  it("ignores an intent that isn't confirmed, isn't this nimDay's, or doesn't exist", async () => {
     const unconfirmed = await prisma.paymentIntent.create({
       data: {
         birthdayId,
@@ -392,7 +392,7 @@ describe.skipIf(!HAS_DB)("birthday messages", () => {
     expect(rev.amountNim).toBe("5");
   });
 
-  it("requires authentication and never leaks another creator's NIMday", async () => {
+  it("requires authentication and never leaks another creator's nimDay", async () => {
     currentUser.mockResolvedValue(null);
     expect((await dashboardRoute.GET(new Request("http://localhost/api"))).status).toBe(
       401,
@@ -433,7 +433,7 @@ describe.skipIf(!HAS_DB)("birthday messages", () => {
       };
     }
 
-    it("lets the creator delete a message from their own NIMday", async () => {
+    it("lets the creator delete a message from their own nimDay", async () => {
       const id = await leave("Happy birthday Sarah!");
       currentUser.mockResolvedValue({ id: userId, walletAddress: RECIPIENT });
 

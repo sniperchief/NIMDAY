@@ -36,7 +36,7 @@ export interface CreatorDashboard {
       daysUntil: number;
       turningAge: number | null;
     };
-    /** NIMday is pointed at test NIM — the dashboard says so rather than
+    /** nimDay is pointed at test NIM — the dashboard says so rather than
      *  letting a creator believe test gifts were real. */
     testnet: boolean;
   };
@@ -50,7 +50,7 @@ export interface CreatorDashboard {
   };
   activity: ActivityItem[];
   /**
-   * The messages on this NIMday, in exactly the shape the public page gets —
+   * The messages on this nimDay, in exactly the shape the public page gets —
    * so the creator's own view can never reveal more about a sender than a
    * visitor sees. Listed here so the creator can remove one.
    */
@@ -68,7 +68,7 @@ function targetToLuna(target: { toString(): string }): bigint {
 const ACTIVITY_LIMIT = 30;
 
 /**
- * Everything the "My NIMday" page shows, for one creator's own NIMday.
+ * Everything the "My nimDay" page shows, for one creator's own nimDay.
  *
  * There is no second source of truth for money here: gift totals and wish
  * progress come from the Phase 2 gift ledger (`Gift` rows with status

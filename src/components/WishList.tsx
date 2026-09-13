@@ -1,6 +1,5 @@
 import * as React from "react";
-import { getTheme } from "@/lib/themes";
-import { GIFT_TYPE_LABEL } from "@/lib/amount";
+import { getTheme, type Theme } from "@/lib/themes";
 import { cn } from "@/components/ui";
 
 export interface WishCardData {
@@ -20,7 +19,7 @@ export interface WishCardData {
 
 function Thumb({ wish }: { wish: WishCardData }) {
   return (
-    <div className="h-[68px] w-[68px] flex-none overflow-hidden rounded-2xl bg-black/[0.06] sm:h-20 sm:w-20">
+    <div className="h-14 w-14 flex-none overflow-hidden rounded-xl bg-black/[0.06]">
       {wish.imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -30,7 +29,7 @@ function Thumb({ wish }: { wish: WishCardData }) {
           loading="lazy"
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center text-2xl opacity-35">
+        <div className="flex h-full w-full items-center justify-center text-xl opacity-35">
           🎁
         </div>
       )}
@@ -38,107 +37,109 @@ function Thumb({ wish }: { wish: WishCardData }) {
   );
 }
 
-function Progress({
+function ProgressBar({
   wish,
   theme,
+  className,
 }: {
   wish: WishCardData;
-  theme: ReturnType<typeof getTheme>;
+  theme: Theme;
+  className?: string;
 }) {
   const pct = Math.max(0, Math.min(100, wish.progressPct ?? 0));
   return (
-    <div className="mt-2.5">
+    <div
+      className={cn("overflow-hidden rounded-full bg-black/[0.08]", className)}
+      role="progressbar"
+      aria-valuenow={Math.round(pct)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={`${wish.title} progress`}
+    >
       <div
-        className="h-2 w-full overflow-hidden rounded-full bg-black/[0.08]"
-        role="progressbar"
-        aria-valuenow={Math.round(pct)}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label={`${wish.title} progress`}
-      >
-        <div
-          className={cn(
-            "h-full rounded-full transition-[width] duration-700 ease-out",
-            theme.accent,
-          )}
-          style={{ width: `${pct === 0 ? 0 : Math.max(6, pct)}%` }}
-        />
-      </div>
-      <p className={cn("mt-1.5 text-[13px]", theme.muted)}>
-        {wish.fulfilled ? (
-          <span className="font-semibold">🎉 Wish fulfilled!</span>
-        ) : (
-          <>
-            <span className="font-semibold">{wish.raisedNim}</span> of{" "}
-            {wish.targetNim} NIM
-          </>
+        className={cn(
+          "h-full rounded-full transition-[width] duration-700 ease-out",
+          theme.accent,
         )}
-      </p>
+        style={{ width: `${pct === 0 ? 0 : Math.max(6, pct)}%` }}
+      />
     </div>
   );
 }
 
-function WishCard({
+/** "85 / 120 NIM", "Fulfilled", or just the target where there's no progress yet. */
+function Amount({ wish, theme }: { wish: WishCardData; theme: Theme }) {
+  const hasProgress = wish.raisedNim !== undefined;
+  return (
+    <p className={cn("flex-none text-[12px] tabular-nums", theme.muted)}>
+      {!hasProgress ? (
+        <>
+          {wish.targetNim} {wish.currency}
+        </>
+      ) : wish.fulfilled ? (
+        <span className="font-semibold">Fulfilled</span>
+      ) : (
+        <>
+          <span className="font-semibold">{wish.raisedNim}</span> / {wish.targetNim} NIM
+        </>
+      )}
+    </p>
+  );
+}
+
+function WishRow({
   wish,
   theme,
   onGift,
 }: {
   wish: WishCardData;
-  theme: ReturnType<typeof getTheme>;
+  theme: Theme;
   onGift?: (wishId: string) => void;
 }) {
-  const showProgress = wish.raisedNim !== undefined;
+  const hasProgress = wish.raisedNim !== undefined;
 
   const body = (
-    <>
-      <div className="flex gap-3.5">
-        <Thumb wish={wish} />
-        <div className="min-w-0 flex-1 text-left">
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-[15px] font-semibold leading-snug">{wish.title}</p>
-            {!showProgress && (
-              <span
-                className={cn(
-                  "flex-none rounded-full px-2.5 py-1 text-xs font-semibold",
-                  theme.accent,
-                  theme.accentText,
-                )}
-              >
-                {wish.targetNim} {wish.currency}
-              </span>
-            )}
-          </div>
-          {wish.description ? (
-            <p className={cn("mt-1 line-clamp-2 text-[13px] leading-relaxed", theme.muted)}>
-              {wish.description}
-            </p>
-          ) : null}
-          <p className={cn("mt-1.5 text-xs", theme.muted)}>
-            {GIFT_TYPE_LABEL[wish.giftType]}
+    <div className="flex items-center gap-3">
+      <Thumb wish={wish} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <p className="min-w-0 truncate text-[14px] font-semibold leading-snug">
+            {wish.title}
           </p>
+          {onGift ? (
+            // Visual only — the whole row is the button, so there is one big
+            // tap target rather than a small one nested inside another.
+            <span
+              aria-hidden
+              className={cn(
+                "flex-none rounded-full px-3 py-1 text-[12px] font-semibold transition group-hover:brightness-110",
+                theme.accent,
+                theme.accentText,
+              )}
+            >
+              Gift
+            </span>
+          ) : null}
+        </div>
+        {wish.description ? (
+          <p className={cn("mt-0.5 line-clamp-2 text-[12px] leading-relaxed", theme.muted)}>
+            {wish.description}
+          </p>
+        ) : null}
+        <div className="mt-2 flex items-center gap-2.5">
+          {hasProgress ? (
+            <ProgressBar wish={wish} theme={theme} className="h-1.5 flex-1" />
+          ) : (
+            <span className="flex-1" />
+          )}
+          <Amount wish={wish} theme={theme} />
         </div>
       </div>
-
-      {showProgress ? <Progress wish={wish} theme={theme} /> : null}
-
-      {onGift ? (
-        <span
-          className={cn(
-            "mt-3 flex min-h-[44px] w-full items-center justify-center rounded-full px-4 text-sm font-semibold transition group-hover:brightness-105",
-            theme.accent,
-            theme.accentText,
-          )}
-        >
-          {wish.fulfilled ? "Give a little extra" : "Send a gift"}
-        </span>
-      ) : null}
-    </>
+    </div>
   );
 
-  const base = cn(
-    "flex h-full w-full flex-col rounded-3xl p-4 ring-1 ring-black/[0.06]",
-    "bg-black/[0.025]",
-  );
+  const base =
+    "block w-full rounded-2xl bg-black/[0.025] p-3 text-left ring-1 ring-black/[0.06]";
 
   if (!onGift) return <div className={base}>{body}</div>;
 
@@ -149,7 +150,7 @@ function WishCard({
       aria-label={`Send a gift toward ${wish.title}`}
       className={cn(
         base,
-        "group text-left transition hover:bg-black/[0.05] active:scale-[0.995]",
+        "group min-h-[44px] transition hover:bg-black/[0.05] active:scale-[0.995]",
       )}
     >
       {body}
@@ -158,8 +159,9 @@ function WishCard({
 }
 
 /**
- * The wishlist. Shared by the public page, the creator preview and the
- * marketing sample so what a creator previews is exactly what a visitor sees.
+ * The wishlist: one compact row per wish. The homepage sample, the creator's
+ * preview and the public page all render these identical rows, so what people
+ * see on the homepage is exactly the card they get.
  */
 export function WishList({
   wishes,
@@ -169,7 +171,8 @@ export function WishList({
   className,
 }: {
   wishes: WishCardData[];
-  theme: string;
+  /** a saved theme id, or a theme object */
+  theme: string | Theme;
   onGift?: (wishId: string) => void;
   /** omit to hide the section heading entirely */
   heading?: React.ReactNode;
@@ -181,10 +184,10 @@ export function WishList({
   return (
     <section className={className}>
       {heading}
-      <ul className="grid gap-3 sm:grid-cols-2">
+      <ul className="grid gap-2.5">
         {wishes.map((w) => (
           <li key={w.id}>
-            <WishCard wish={w} theme={theme} onGift={onGift} />
+            <WishRow wish={w} theme={theme} onGift={onGift} />
           </li>
         ))}
       </ul>

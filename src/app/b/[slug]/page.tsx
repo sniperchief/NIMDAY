@@ -13,14 +13,14 @@ type Search = { searchParams: Promise<{ gift?: string; intent?: string }> };
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const b = await getPublishedBirthdayBySlug(slug);
-  if (!b) return { title: "NIMday not found" };
+  if (!b) return { title: "nimDay not found" };
 
   const pub = toPublicBirthday(b);
   const first = pub.name.split(/\s+/)[0] || pub.name;
   const title = `It's ${pub.name}'s birthday 🎂`;
   const description =
     pub.message?.slice(0, 160) ||
-    `${first} made a NIMday with a few wishes. Take a look and help them celebrate.`;
+    `${first} made a nimDay with a few wishes. Take a look and help them celebrate.`;
   const url = publicBirthdayUrl(env.appOrigin, slug);
 
   return {

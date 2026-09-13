@@ -5,7 +5,7 @@ import { deleteMessageAsCreator } from "@/lib/messages/store";
 type Ctx = { params: Promise<{ id: string }> };
 
 /**
- * Remove a message from your own NIMday.
+ * Remove a message from your own nimDay.
  *
  * The only creator operation on messages there is — this is not moderation,
  * it is the birthday person taking a note off their own card. Ownership comes

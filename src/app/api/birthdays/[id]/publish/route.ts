@@ -18,7 +18,7 @@ export const POST = route(async (_req, ctx: Ctx) => {
   const b = await requireOwnedBirthday(user.id, id);
   const problems = publishProblems(b);
   if (problems.length > 0) {
-    return badRequest("This NIMday isn't ready to publish yet", { problems });
+    return badRequest("This nimDay isn't ready to publish yet", { problems });
   }
 
   await prisma.birthday.update({

@@ -68,7 +68,7 @@ const MESSAGE_INCLUDE = {
   gift: { include: { wish: { select: { title: true } } } },
 } as const;
 
-/** Messages on a published NIMday, newest first. Sender identity never leaves the server. */
+/** Messages on a published nimDay, newest first. Sender identity never leaves the server. */
 export async function listMessages(
   birthdayId: string,
   limit: number = MESSAGE_PAGE_SIZE,
@@ -93,7 +93,7 @@ export async function listMessagesBySlug(
     where: { slug },
     select: { id: true, published: true },
   });
-  if (!birthday || !birthday.published) throw notFound("That NIMday isn't available");
+  if (!birthday || !birthday.published) throw notFound("That nimDay isn't available");
   const [messages, total] = await Promise.all([
     listMessages(birthday.id),
     countMessages(birthday.id),
@@ -104,7 +104,7 @@ export async function listMessagesBySlug(
 /**
  * Resolve a gift to attach, from a payment intent the visitor just paid.
  *
- * Rules, in order: the intent must exist, belong to *this* NIMday, be confirmed,
+ * Rules, in order: the intent must exist, belong to *this* nimDay, be confirmed,
  * and have a gift. An **anonymous gift is never linked** — attaching a named
  * message to it would tell the creator exactly who the anonymous giver was.
  */
@@ -138,7 +138,7 @@ export async function createMessage(
     where: { slug: input.slug },
     select: { id: true, published: true },
   });
-  if (!birthday || !birthday.published) throw notFound("That NIMday isn't available");
+  if (!birthday || !birthday.published) throw notFound("That nimDay isn't available");
 
   const body = normalizeBody(input.body ?? "");
   const bodyProblem = checkBody(body);
@@ -174,7 +174,7 @@ export async function createMessage(
 }
 
 /**
- * Delete a message from a NIMday — creator only.
+ * Delete a message from a nimDay — creator only.
  *
  * Authorization is resolved entirely from the authenticated user id and the
  * message's own birthday: no creator id, birthday id or slug is taken from the
@@ -198,7 +198,7 @@ export async function deleteMessageAsCreator(
   });
   if (!message) throw notFound("That message has already gone");
   if (message.birthday.creatorId !== userId) {
-    throw forbidden("You can only remove messages from your own NIMday");
+    throw forbidden("You can only remove messages from your own nimDay");
   }
 
   await prisma.message.delete({ where: { id: message.id } });

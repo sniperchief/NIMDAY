@@ -67,7 +67,7 @@ describe("sharePayload / fallback", () => {
   it("carries the canonical url and the right voice", () => {
     const url = publicBirthdayUrl("https://nimday.app", "sarah");
     expect(sharePayload("Sarah", url, "creator")).toEqual({
-      title: "NIMday",
+      title: "nimDay",
       text: creatorShareText("Sarah"),
       url,
     });

@@ -14,7 +14,7 @@ import {
 
 export function buildChallengeMessage(nonce: string): string {
   return [
-    "Sign in to NIMday",
+    "Sign in to nimDay",
     "",
     "This request will not trigger a transaction or cost any fees.",
     "",

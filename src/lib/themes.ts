@@ -1,5 +1,5 @@
 /**
- * NIMday themes. Three polished birthday-card looks — warm, elegant, playful.
+ * nimDay themes. Three polished birthday-card looks — bold, elegant, soft.
  * No crypto aesthetics. Each theme is a small palette + a decorative motif that
  * <BirthdayCard> and the public page render identically.
  */
@@ -30,19 +30,28 @@ export interface Theme {
 }
 
 export const THEMES = {
+  /**
+   * The default theme, in the nimDay brand colours (it used to be pink).
+   *
+   * Contrast (WCAG): bright persimmon #EF5B2B is used only for large text — the
+   * name. Fills that carry small white text, like the countdown pill and the
+   * "Send a gift" buttons, use the deep shade #C63E15, where white reads at
+   * 5.12:1; on bright persimmon white would be 3.39:1, below the 4.5:1 that
+   * small text needs.
+   */
   confetti: {
     id: "confetti",
     name: "Confetti",
-    blurb: "Bright and playful",
-    page: "bg-[#fdf6ef]",
+    blurb: "Bold and bright",
+    page: "bg-white",
     card: "bg-white",
     text: "text-[#2b2622]",
     muted: "text-[#8a7f74]",
-    accent: "bg-[#ff5c8a]",
+    accent: "bg-persimmon-deep",
     accentText: "text-white",
-    heading: "font-display text-[#ff5c8a]",
+    heading: "font-display text-persimmon",
     motif: "confetti",
-    swatches: ["#ff5c8a", "#ffd166", "#4cc9f0"],
+    swatches: ["#EF5B2B", "#F6B26B", "#D9C7B0"],
   },
   goldenHour: {
     id: "goldenHour",
@@ -84,6 +93,11 @@ export function isThemeId(value: unknown): value is ThemeId {
   return typeof value === "string" && value in THEMES;
 }
 
-export function getTheme(id: string | null | undefined): Theme {
-  return isThemeId(id) ? THEMES[id] : THEMES[DEFAULT_THEME_ID];
+/**
+ * Resolve a theme. Accepts a saved theme id — anything unknown falls back to
+ * the default — or a theme object, which is used as-is.
+ */
+export function getTheme(theme: string | Theme | null | undefined): Theme {
+  if (theme && typeof theme === "object") return theme;
+  return isThemeId(theme) ? THEMES[theme] : THEMES[DEFAULT_THEME_ID];
 }

@@ -39,7 +39,7 @@ export interface GiftDeepLinkOptions {
 }
 
 /**
- * The URL of the public NIMday page carrying gift context. The page reads
+ * The URL of the public nimDay page carrying gift context. The page reads
  * `?gift=1` to open the gift UI and `?intent=<id>` to resume a specific payment.
  */
 export function giftTargetUrl(
@@ -53,7 +53,7 @@ export function giftTargetUrl(
   return `${base}?${params.toString()}`;
 }
 
-/** Deep link that opens a NIMday's gift flow inside Nimiq Pay. */
+/** Deep link that opens a nimDay's gift flow inside Nimiq Pay. */
 export function giftDeepLink(
   origin: string,
   slug: string,

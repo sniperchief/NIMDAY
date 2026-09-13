@@ -3,7 +3,7 @@
  * crediting code (`applyTransactionToIntent` -> `creditGift`), with a small
  * in-memory database standing in for Prisma.
  *
- * What happened on the device: the giver connected, NIMday stored the first
+ * What happened on the device: the giver connected, nimDay stored the first
  * address Nimiq Pay listed and pinned it to the intent, and the wallet then paid
  * from a different one of the giver's accounts. Verification rejected a genuine,
  * correctly addressed, correctly memo'd payment as `wrong_sender`.

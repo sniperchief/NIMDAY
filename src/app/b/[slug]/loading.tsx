@@ -1,14 +1,14 @@
 /**
- * Shown while a NIMday is being fetched on a client-side navigation. Shaped
+ * Shown while a nimDay is being fetched on a client-side navigation. Shaped
  * like the card that's coming so the page doesn't jump when it arrives.
  */
 export default function LoadingBirthday() {
   return (
-    <main className="min-h-dvh bg-cream px-4 py-6 sm:py-10">
+    <main className="min-h-dvh bg-white px-4 py-6 sm:py-10">
       <div
         className="mx-auto w-full max-w-lg space-y-4"
         role="status"
-        aria-label="Loading this NIMday"
+        aria-label="Loading this nimDay"
       >
         <div className="animate-pulse overflow-hidden rounded-[28px] bg-white ring-1 ring-black/5">
           <div className="h-28 bg-black/[0.06]" />
