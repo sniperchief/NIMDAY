@@ -7,12 +7,12 @@ Create a birthday page, add a few wishes, connect your Nimiq wallet, publish, an
 
 **Current status: release candidate.** The creator flow, public birthday page,
 NIM gifting with backend verification, birthday messages, the Birthday Quest and
-the creator dashboard are all in, with 189 passing tests and a clean build.
+the creator dashboard are all in, with 227 passing tests.
 
-**Not yet verified:** no Nimiq Pay device has been tested against this build, so
-real wallet connection, real signing and real NIM movement are unproven. The
-gift path has only been exercised with synthetic transactions through the real
-verification and credit code.
+**Tested on a real device.** The full flow has been run on a mobile phone inside
+Nimiq Pay on testnet: wallet sign-in, creating and publishing a nimDay, and a real
+testnet NIM gift that the verification worker confirmed on-chain and credited to
+the wish. A mainnet gift has not been tested yet.
 
 > A payment only becomes a gift when the **backend** independently verifies a
 > confirmed on-chain transaction. The frontend can never declare success.
