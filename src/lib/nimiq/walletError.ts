@@ -133,10 +133,18 @@ export function classifyWalletError(err: unknown): WalletError {
   return new WalletError("unknown", text);
 }
 
-export function friendlyWalletMessage(code: WalletErrorCode): string {
+/** What the visitor was doing. Only the "not in Nimiq Pay" wording depends on it. */
+export type WalletAction = "connect" | "gift";
+
+export function friendlyWalletMessage(
+  code: WalletErrorCode,
+  action: WalletAction = "gift",
+): string {
   switch (code) {
     case "unavailable":
-      return "Open this page inside Nimiq Pay to send a gift.";
+      return action === "connect"
+        ? "Connecting a wallet only works inside the Nimiq Pay app. Open this page in Nimiq Pay, or install the app first."
+        : "Gifts are sent from the Nimiq Pay app. Open this page in Nimiq Pay, or install the app first.";
     case "rejected":
       return "No problem — nothing was sent. You can try again whenever you're ready.";
     case "consensus":
@@ -163,8 +171,11 @@ export function friendlyWalletMessage(code: WalletErrorCode): string {
  * the two codes that mean "we have never seen this" the raw detail is the only
  * way anyone finds out what happened.
  */
-export function describeWalletError(err: WalletError): string {
-  const friendly = friendlyWalletMessage(err.code);
+export function describeWalletError(
+  err: WalletError,
+  action: WalletAction = "gift",
+): string {
+  const friendly = friendlyWalletMessage(err.code, action);
   if (err.code !== "unknown" && err.code !== "tx-result") return friendly;
   const detail = err.message?.trim();
   if (!detail || detail === friendly) return friendly;

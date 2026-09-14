@@ -5,12 +5,12 @@ import { Button } from "@/components/ui";
 import {
   connectWallet,
   signMessage,
-  isNimiqPayAvailable,
   describeWalletError,
   WalletError,
 } from "@/lib/nimiq/provider";
 import { requestNonce, verifySignature, ApiError } from "@/lib/apiClient";
-import { createNimiqPayDeepLink } from "@/lib/nimiq/deepLink";
+import { useNimiqPayPresence } from "@/lib/nimiq/useNimiqPayPresence";
+import { NimiqPayHandoff } from "@/components/nimiq/NimiqPayHandoff";
 
 type Status = "idle" | "working" | "done" | "error";
 
@@ -27,7 +27,7 @@ export function ConnectStep({
   const [message, setMessage] = useState<string | null>(null);
 
   const devAllowed = process.env.NEXT_PUBLIC_ALLOW_DEV_WALLET === "1";
-  const inNimiqPay = typeof window !== "undefined" && isNimiqPayAvailable();
+  const presence = useNimiqPayPresence();
 
   async function run() {
     setStatus("working");
@@ -41,7 +41,7 @@ export function ConnectStep({
       setStatus("done");
     } catch (err) {
       setStatus("error");
-      if (err instanceof WalletError) setMessage(describeWalletError(err));
+      if (err instanceof WalletError) setMessage(describeWalletError(err, "connect"));
       else if (err instanceof ApiError) setMessage(err.message);
       else setMessage("Something went wrong. Please try again.");
     }
@@ -96,39 +96,43 @@ export function ConnectStep({
         </p>
       </div>
 
-      {!inNimiqPay && (
-        <div className="rounded-2xl bg-amber-50 p-4 text-sm ring-1 ring-amber-200">
-          <p className="font-medium text-amber-900">Open this in Nimiq Pay</p>
-          <p className="mt-1 text-amber-800">
-            Wallet connection works inside the Nimiq Pay app. Open this page there
-            to continue.
+      {/* Outside Nimiq Pay a Connect button can only time out, so offer the
+          way into the app instead. */}
+      {presence === "missing" && (
+        <div className="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200">
+          <p className="text-sm font-medium text-amber-900">
+            You&apos;re not in Nimiq Pay right now
           </p>
-          <a
-            className="mt-3 inline-block rounded-full bg-amber-900 px-4 py-2 text-xs font-medium text-amber-50"
-            href={createNimiqPayDeepLink(
-              typeof window !== "undefined" ? window.location.href : "",
-            )}
-          >
-            Open in Nimiq Pay
-          </a>
+          <p className="mt-1 text-sm text-amber-800">
+            Connecting a wallet only works inside the Nimiq Pay app.
+          </p>
+          <NimiqPayHandoff
+            className="mt-4"
+            targetUrl={typeof window !== "undefined" ? window.location.href : ""}
+          />
         </div>
       )}
 
       {message ? (
-        <p className="whitespace-pre-line break-words rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200">
+        <p
+          role="alert"
+          className="whitespace-pre-line break-words rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200"
+        >
           {message}
         </p>
       ) : null}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <Button
-          size="lg"
-          loading={status === "working"}
-          onClick={run}
-          className="w-full sm:w-auto"
-        >
-          Connect Nimiq Wallet
-        </Button>
+        {presence !== "missing" && (
+          <Button
+            size="lg"
+            loading={status === "working" || presence === "checking"}
+            onClick={run}
+            className="w-full sm:w-auto"
+          >
+            Connect Nimiq Wallet
+          </Button>
+        )}
         {devAllowed && (
           <Button variant="ghost" onClick={devLogin} disabled={status === "working"}>
             Use a test wallet (dev)

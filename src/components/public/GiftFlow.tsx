@@ -7,11 +7,13 @@ import { nimStringToLuna, lunaToNimString, lunaToSdkValue, MoneyError } from "@/
 import {
   connectWallet,
   sendGiftTransaction,
-  isNimiqPayAvailable,
   friendlyWalletMessage,
   describeWalletError,
   WalletError,
 } from "@/lib/nimiq/provider";
+import { giftTargetUrl } from "@/lib/nimiq/deepLink";
+import { useNimiqPayPresence } from "@/lib/nimiq/useNimiqPayPresence";
+import { NimiqPayHandoff } from "@/components/nimiq/NimiqPayHandoff";
 import { giftFailureMessage } from "@/lib/gifts/failureCopy";
 import {
   ApiError,
@@ -49,6 +51,7 @@ type Step =
 
 export function GiftFlow({
   slug,
+  origin,
   birthdayName,
   wishes,
   testnet,
@@ -97,7 +100,7 @@ export function GiftFlow({
     [wishes, wishId],
   );
 
-  const inNimiqPay = typeof window !== "undefined" && isNimiqPayAvailable();
+  const inNimiqPay = useNimiqPayPresence() === "available";
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -224,6 +227,13 @@ export function GiftFlow({
     };
   }, [open]);
 
+  // Nimiq Pay can inject its provider after the handoff was chosen. When it
+  // does, go straight to connecting rather than asking them to open the app
+  // they're already in.
+  useEffect(() => {
+    if (step === "handoff" && inNimiqPay) setStep("connect");
+  }, [step, inNimiqPay]);
+
   // Tell the page exactly once when a gift is confirmed, whichever route got
   // us here (fresh send, resumed deep link, or a poll that caught up).
   useEffect(() => {
@@ -279,7 +289,7 @@ export function GiftFlow({
     } catch (e) {
       setError(
         e instanceof WalletError
-          ? friendlyWalletMessage(e.code)
+          ? friendlyWalletMessage(e.code, "gift")
           : "Couldn't connect to Nimiq Pay.",
       );
     } finally {
@@ -439,15 +449,12 @@ export function GiftFlow({
               </p>
             </div>
             <TestnetNotice show={onTestnet} />
-            <a
-              href={intent.deepLink}
-              className="block rounded-full bg-ink px-5 py-3 text-sm font-medium text-cream"
-            >
-              Open in Nimiq Pay
-            </a>
-            <p className="text-xs text-ink/45">
-              Don&apos;t have it yet? Install Nimiq Pay, then reopen this link.
-            </p>
+            {/* A resumed intent arrives without a deep link, so rebuild it
+                from the page URL rather than rendering an empty link. */}
+            <NimiqPayHandoff
+              targetUrl={giftTargetUrl(origin, slug, intent.id)}
+              deepLink={intent.deepLink || undefined}
+            />
             <Button variant="ghost" onClick={onClose}>
               Not now
             </Button>

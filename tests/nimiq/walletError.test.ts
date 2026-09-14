@@ -112,6 +112,15 @@ describe("describeWalletError", () => {
     expect(describeWalletError(rejected)).not.toContain("USER_REJECTED");
   });
 
+  it("words 'not in Nimiq Pay' for what the visitor was doing", () => {
+    const missing = new WalletError("unavailable", "Nimiq provider was not injected");
+    expect(describeWalletError(missing, "connect")).toContain("Connecting a wallet");
+    expect(describeWalletError(missing, "connect")).not.toContain("gift");
+    expect(describeWalletError(missing)).toContain("Gifts are sent");
+    // The SDK's internal wording never reaches the visitor.
+    expect(describeWalletError(missing, "connect")).not.toContain("injected");
+  });
+
   it("does not repeat itself when there is no extra detail", () => {
     const bare = new WalletError("unknown", "");
     expect(describeWalletError(bare)).toBe(friendlyWalletMessage("unknown"));

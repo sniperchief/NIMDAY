@@ -14,6 +14,7 @@ import {
   describeWalletError,
   friendlyWalletMessage,
   isProviderError,
+  type WalletAction,
   type WalletErrorCode,
 } from "@/lib/nimiq/walletError";
 
@@ -21,6 +22,7 @@ export {
   WalletError,
   describeWalletError,
   friendlyWalletMessage,
+  type WalletAction,
   type WalletErrorCode,
 };
 

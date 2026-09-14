@@ -14,6 +14,29 @@
 const HTTPS_BASE = "https://nimpay.app/miniapps/open/";
 const CUSTOM_SCHEME = "nimiqpay://miniapp";
 
+/** Where a visitor without Nimiq Pay installs it (as linked from nimpay.app). */
+export const NIMIQ_PAY_STORE_LINKS = {
+  ios: "https://apps.apple.com/app/nimiq-pay/id6471844738",
+  android: "https://play.google.com/store/apps/details?id=com.nimiq.pay",
+} as const;
+
+export type DevicePlatform = "ios" | "android" | "desktop";
+
+/**
+ * Which store to offer. Nimiq Pay is phone-only, so anything that isn't iOS or
+ * Android is treated as a computer that needs to hand off to a phone.
+ */
+export function detectPlatform(
+  userAgent: string,
+  maxTouchPoints = 0,
+): DevicePlatform {
+  if (/android/i.test(userAgent)) return "android";
+  if (/iphone|ipad|ipod/i.test(userAgent)) return "ios";
+  // iPadOS 13+ reports itself as a Mac; only the touch screen gives it away.
+  if (/macintosh/i.test(userAgent) && maxTouchPoints > 1) return "ios";
+  return "desktop";
+}
+
 export type DeepLinkKind = "https" | "custom";
 
 /**
