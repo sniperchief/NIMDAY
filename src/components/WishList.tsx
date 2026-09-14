@@ -8,7 +8,6 @@ export interface WishCardData {
   description: string | null;
   imageUrl: string | null;
   currency: "NIM" | "USDT";
-  giftType: "FUND" | "BUY" | "EITHER";
   /** trimmed NIM string, e.g. "120" */
   targetNim: string;
   /** present on the public page only (verified contributions) */

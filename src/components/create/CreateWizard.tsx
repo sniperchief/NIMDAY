@@ -43,7 +43,6 @@ function toWishInput(w: DraftWish): WishInput {
     imageUrl: w.imageUrl || undefined,
     targetAmount: Number(w.targetAmount),
     currency: "NIM",
-    giftType: w.giftType,
   };
 }
 
@@ -103,7 +102,6 @@ export function CreateWizard() {
         imageUrl: w.imageUrl || null,
         targetNim: w.targetAmount || "0",
         currency: "NIM" as const,
-        giftType: w.giftType,
       })),
     [draft.wishes],
   );

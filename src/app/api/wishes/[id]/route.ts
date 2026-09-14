@@ -25,7 +25,6 @@ export const PATCH = route(async (req, ctx: Ctx) => {
         ? { targetAmount: input.targetAmount }
         : {}),
       ...(input.currency !== undefined ? { currency: input.currency } : {}),
-      ...(input.giftType !== undefined ? { giftType: input.giftType } : {}),
     },
   });
 

@@ -80,9 +80,8 @@ const run = async () => {
           description: "The over-ear ones I keep talking about",
           targetAmount: 10,
           currency: "NIM",
-          giftType: "FUND",
         },
-        { title: "Pottery class", targetAmount: 25, currency: "NIM", giftType: "EITHER" },
+        { title: "Pottery class", targetAmount: 25, currency: "NIM" },
       ],
     }),
   });
@@ -477,7 +476,7 @@ const run = async () => {
 
   const spare = await api(`/api/birthdays/${birthday.id}/wishes`, {
     method: "POST",
-    body: JSON.stringify({ title: "Socks", targetAmount: 3, currency: "NIM", giftType: "EITHER" }),
+    body: JSON.stringify({ title: "Socks", targetAmount: 3, currency: "NIM" }),
   });
   const spareId = spare.body.data.birthday.wishes.find((w) => w.title === "Socks").id;
   const spareDeleted = await api(`/api/wishes/${spareId}`, { method: "DELETE" });

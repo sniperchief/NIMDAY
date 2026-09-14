@@ -49,7 +49,6 @@ export const wishInputSchema = z.object({
   currency: z
     .enum(["NIM", "USDT"])
     .refine((c) => c === "NIM", "USDT isn't available yet — choose NIM"),
-  giftType: z.enum(["FUND", "BUY", "EITHER"]),
 });
 export type WishInput = z.infer<typeof wishInputSchema>;
 

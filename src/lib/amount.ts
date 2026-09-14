@@ -10,9 +10,3 @@ export function formatAmount(
   const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return `${frac ? `${grouped}.${frac}` : grouped} ${currency}`;
 }
-
-export const GIFT_TYPE_LABEL: Record<"FUND" | "BUY" | "EITHER", string> = {
-  FUND: "Fund this gift",
-  BUY: "Buy this gift",
-  EITHER: "Gift or contribute",
-};

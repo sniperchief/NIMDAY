@@ -1,13 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Field, Input, Textarea, cn } from "@/components/ui";
+import { Button, Field, Input, Textarea } from "@/components/ui";
 import { ImageUpload } from "./ImageUpload";
-import { GIFT_TYPE_LABEL } from "@/lib/amount";
 import { MAX_WISHES } from "@/lib/validation";
 import { newWish, type Draft, type DraftWish } from "./types";
-
-const GIFT_TYPES: DraftWish["giftType"][] = ["FUND", "BUY", "EITHER"];
 
 /**
  * A wish that has already received a gift can't be deleted — the server
@@ -85,29 +82,6 @@ function WishForm({
             <span className="text-sm font-medium text-ink/60">NIM</span>
           </div>
         </Field>
-      </div>
-
-      <div>
-        <span className="mb-1.5 block text-sm font-medium text-ink/80">
-          How would you like to receive it?
-        </span>
-        <div className="flex flex-wrap gap-2">
-          {GIFT_TYPES.map((gt) => (
-            <button
-              key={gt}
-              type="button"
-              onClick={() => setW({ ...w, giftType: gt })}
-              className={cn(
-                "rounded-full px-3 py-1.5 text-sm ring-1 transition",
-                w.giftType === gt
-                  ? "bg-ink text-cream ring-ink"
-                  : "bg-white text-ink/70 ring-black/10",
-              )}
-            >
-              {GIFT_TYPE_LABEL[gt]}
-            </button>
-          ))}
-        </div>
       </div>
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -202,7 +176,7 @@ export function WishesStep({
                   {w.title || "Untitled wish"}
                 </p>
                 <p className="text-xs text-ink/50">
-                  {w.targetAmount || "0"} NIM · {GIFT_TYPE_LABEL[w.giftType]}
+                  {w.targetAmount || "0"} NIM
                 </p>
                 {gifted(w) ? (
                   <p className="mt-0.5 text-xs font-medium text-persimmon-deep">

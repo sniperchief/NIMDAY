@@ -28,7 +28,6 @@ export const POST = route(async (req, ctx: Ctx) => {
       imageUrl: input.imageUrl ?? null,
       targetAmount: input.targetAmount,
       currency: input.currency,
-      giftType: input.giftType,
       sortOrder: nextOrder,
     },
   });

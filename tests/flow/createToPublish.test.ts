@@ -32,8 +32,8 @@ const validBirthday = {
   message: "Come celebrate!",
   theme: "confetti",
   wishes: [
-    { title: "Headphones", targetAmount: 120, currency: "NIM", giftType: "FUND" },
-    { title: "Book", targetAmount: 20, currency: "NIM", giftType: "EITHER" },
+    { title: "Headphones", targetAmount: 120, currency: "NIM" },
+    { title: "Book", targetAmount: 20, currency: "NIM" },
   ],
 };
 
@@ -87,13 +87,13 @@ describe("creator flow: create → publish → public view", () => {
 
     for (let i = 0; i < 5; i++) {
       const r = await addWish(
-        jsonReq({ title: `w${i}`, targetAmount: 10, currency: "NIM", giftType: "EITHER" }),
+        jsonReq({ title: `w${i}`, targetAmount: 10, currency: "NIM" }),
         ctx(created.id),
       );
       expect(r.status).toBe(201);
     }
     const sixth = await addWish(
-      jsonReq({ title: "w6", targetAmount: 10, currency: "NIM", giftType: "EITHER" }),
+      jsonReq({ title: "w6", targetAmount: 10, currency: "NIM" }),
       ctx(created.id),
     );
     expect(sixth.status).toBe(409);

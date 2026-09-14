@@ -24,10 +24,14 @@ enum Currency {
   USDT // reserved — never selectable, always rejected server-side (MVP is NIM-only)
 }
 
+// Retired: creators no longer choose a gift type. Every wish works the same way
+// (givers send any amount of NIM toward the target), so the app never sets or
+// reads this and new wishes take the EITHER default. The column stays only to
+// avoid a destructive migration; drop it in one if you want it gone.
 enum GiftType {
-  FUND // "Fund this gift" — contribute toward the target
-  BUY // "Buy this gift" — creator wants the actual item
-  EITHER // creator is happy with either
+  FUND
+  BUY
+  EITHER
 }
 
 enum PaymentIntentStatus {

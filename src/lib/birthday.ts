@@ -23,7 +23,6 @@ export interface EditorWish {
   imageUrl: string | null;
   targetAmount: string;
   currency: "NIM" | "USDT";
-  giftType: "FUND" | "BUY" | "EITHER";
   sortOrder: number;
   /** verified contributions so far, e.g. "45.5" — display only */
   raisedNim: string;
@@ -50,7 +49,6 @@ export interface PublicWish {
   description: string | null;
   imageUrl: string | null;
   currency: "NIM" | "USDT";
-  giftType: "FUND" | "BUY" | "EITHER";
   targetNim: string; // trimmed, e.g. "120"
   raisedNim: string; // verified contributions only, e.g. "45.5"
   raisedLuna: string;
@@ -92,7 +90,6 @@ function wishToPublic(w: Wish): PublicWish {
     description: w.description,
     imageUrl: w.imageUrl,
     currency: w.currency,
-    giftType: w.giftType,
     targetNim: lunaToNimString(targetLuna),
     raisedNim: lunaToNimString(raisedLuna),
     raisedLuna: raisedLuna.toString(),
@@ -109,7 +106,6 @@ function wishToEditor(w: WishWithCounts): EditorWish {
     imageUrl: w.imageUrl,
     targetAmount: w.targetAmount.toString(),
     currency: w.currency,
-    giftType: w.giftType,
     sortOrder: w.sortOrder,
     raisedNim: lunaToNimString(BigInt(w.raisedLuna ?? 0)),
     giftCount: w._count?.gifts ?? 0,

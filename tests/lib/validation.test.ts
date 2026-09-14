@@ -10,7 +10,6 @@ const baseWish = {
   title: "Headphones",
   targetAmount: 120,
   currency: "NIM" as const,
-  giftType: "FUND" as const,
 };
 
 describe("wishInputSchema", () => {
@@ -18,12 +17,10 @@ describe("wishInputSchema", () => {
     expect(wishInputSchema.safeParse(baseWish).success).toBe(true);
   });
 
-  it("accepts all three gift types", () => {
-    for (const giftType of ["FUND", "BUY", "EITHER"] as const) {
-      expect(
-        wishInputSchema.safeParse({ ...baseWish, giftType }).success,
-      ).toBe(true);
-    }
+  it("ignores the retired gift type an older client may still send", () => {
+    const res = wishInputSchema.safeParse({ ...baseWish, giftType: "BUY" });
+    expect(res.success).toBe(true);
+    if (res.success) expect(res.data).not.toHaveProperty("giftType");
   });
 
   it("rejects a non-positive target", () => {
