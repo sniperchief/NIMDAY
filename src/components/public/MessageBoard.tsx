@@ -21,7 +21,8 @@ function noteTint(theme: ReturnType<typeof getTheme>, index: number): string {
   return `${theme.swatches[index % theme.swatches.length]}14`;
 }
 
-function MessageNote({
+/** One message as it appears on a nimDay. Also rendered by the homepage showcase. */
+export function MessageNote({
   message,
   theme,
   index,
@@ -47,7 +48,8 @@ function MessageNote({
         <span className={cn("text-[13px] font-semibold", theme.text)}>
           {message.author}
         </span>
-        <span className={cn("text-xs", theme.muted)}>
+        {/* relative time can differ between server render and hydration */}
+        <span className={cn("text-xs", theme.muted)} suppressHydrationWarning>
           · {timeAgo(message.createdAt)}
         </span>
         {message.gift ? (

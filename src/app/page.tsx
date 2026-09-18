@@ -3,58 +3,19 @@ import Link from "next/link";
 import { BirthdayCard } from "@/components/BirthdayCard";
 import { WishList } from "@/components/WishList";
 import { GiftMark, Wordmark } from "@/components/brand/Wordmark";
+import { SAMPLE, SAMPLE_WISHES } from "@/components/landing/sample";
+import {
+  BirthdayMessages,
+  FinalCta,
+  HowItWorks,
+  NimGifting,
+  ProductShowcase,
+  WishlistExperience,
+} from "@/components/landing/LandingSections";
 
 export const metadata: Metadata = {
   title: { absolute: "nimDay — Your birthday. Your wishes. One beautiful link." },
 };
-
-const SAMPLE = {
-  name: "Sarah",
-  birthday: sampleBirthdayISO(),
-  message: null,
-  theme: "confetti",
-  // Pexels photo, cropped to a 384px square and compressed (~20 KB). The
-  // original stays out of the repo.
-  imageUrl: "/sample/sarah.jpg",
-};
-
-const SAMPLE_WISHES = [
-  {
-    id: "s1",
-    title: "New headphones",
-    description: "The over-ear ones I keep talking about",
-    imageUrl: "/sample/headphones.jpg",
-    targetNim: "120",
-    currency: "NIM" as const,
-    raisedNim: "85",
-    progressPct: 71,
-    fulfilled: false,
-  },
-  {
-    id: "s2",
-    title: "iPhone 18",
-    description: null,
-    imageUrl: "/sample/iphone-18.jpg",
-    targetNim: "60",
-    currency: "NIM" as const,
-    raisedNim: "60",
-    progressPct: 100,
-    fulfilled: true,
-  },
-];
-
-/**
- * A birthday about a month away (and a plausible birth year), so the sample's
- * date tile always shows an upcoming date whenever the page was built.
- */
-function sampleBirthdayISO() {
-  const next = new Date();
-  next.setUTCMonth(next.getUTCMonth() + 1);
-  const born = new Date(
-    Date.UTC(next.getUTCFullYear() - 30, next.getUTCMonth(), next.getUTCDate()),
-  );
-  return born.toISOString().slice(0, 10);
-}
 
 export default function Home() {
   return (
@@ -87,8 +48,9 @@ export default function Home() {
             </h1>
 
             <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-ink/65 lg:mx-0">
-              Make a card, add a few things you&apos;d actually love, and share one
-              link. Friends pick a wish and send a gift straight to your wallet.
+              Create a beautiful birthday card, add the things you actually want,
+              and share one link. Friends can pick a wish and send NIM straight to
+              your wallet.
             </p>
 
             <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center lg:justify-start">
@@ -123,6 +85,13 @@ export default function Home() {
           </section>
         </div>
       </div>
+
+      <HowItWorks />
+      <WishlistExperience />
+      <ProductShowcase />
+      <NimGifting />
+      <BirthdayMessages />
+      <FinalCta />
 
       <footer className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-5 pb-10 text-xs text-ink/40 sm:flex-row sm:justify-between">
         <Wordmark className="h-4 w-auto text-ink/50" />
