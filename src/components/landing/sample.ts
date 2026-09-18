@@ -97,8 +97,15 @@ const AIRPODS: WishCardData = {
   fulfilled: false,
 };
 
-/** The hero card: one wish in progress, one fulfilled. */
-export const SAMPLE_WISHES: WishCardData[] = [HEADPHONES, PHONE];
+/** The hero: one wish a friend has just fulfilled. */
+export const SAMPLE_HERO_WISH: WishCardData = {
+  ...AIRPODS,
+  id: "hero",
+  description: null,
+  raisedNim: "200",
+  progressPct: 100,
+  fulfilled: true,
+};
 
 /** The wishlist section: a fresh wish, one in progress, one fulfilled. */
 export const SAMPLE_WISHLIST: WishCardData[] = [AIRPODS, HEADPHONES, PHONE];
@@ -162,8 +169,8 @@ export const SAMPLE_MESSAGES: Record<
   },
   named: {
     id: "m2",
-    body: "Happy birthday Andrew! Can't wait to celebrate with you on Saturday 🎉",
-    author: "Leo",
+    body: "Happy birthday! Dinner's on me this weekend — no arguments 🍝",
+    author: "Jonah",
     anonymous: false,
     createdAt: hoursAgo(5),
     gift: null,
@@ -186,12 +193,25 @@ export const SAMPLE_MESSAGES: Record<
   },
 };
 
-/** Messages under the showcase card, matching its wishes. */
+/**
+ * Messages under the showcase card, matching its wishes. Separate people from
+ * the messages section, so the two sections don't repeat each other.
+ */
 export const SAMPLE_SHOWCASE_MESSAGES: PublicMessage[] = [
   {
-    ...SAMPLE_MESSAGES.gift,
+    id: "m5",
     body: "Happy 30th! Put this toward the bag — you've earned an upgrade 🎁",
-    gift: { amountNim: "35", wishTitle: "Leather messenger bag" },
+    author: "Chris",
+    anonymous: false,
+    createdAt: hoursAgo(3),
+    gift: { amountNim: "40", wishTitle: "Leather messenger bag" },
   },
-  SAMPLE_MESSAGES.named,
+  {
+    id: "m6",
+    body: "Happy birthday Andrew! Can't wait to celebrate with you on Saturday 🎉",
+    author: "Leo",
+    anonymous: false,
+    createdAt: hoursAgo(5),
+    gift: null,
+  },
 ];

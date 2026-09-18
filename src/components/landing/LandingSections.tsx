@@ -241,6 +241,17 @@ export function ProductShowcase() {
           <p className="px-1 text-xs text-ink/45">
             Example nimDay with sample content. Real nimDays live at their own link.
           </p>
+          {/* Fills the space beside the taller card on desktop; on a phone
+              the columns stack, so it would only add length. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/hero/holding-gift.jpg"
+            alt=""
+            width={1000}
+            height={667}
+            loading="lazy"
+            className="hidden aspect-[3/2] w-full rounded-[28px] object-cover object-[55%_35%] ring-1 ring-black/[0.06] lg:block"
+          />
         </div>
       </div>
     </Section>
@@ -353,34 +364,49 @@ export function FinalCta() {
   return (
     <section aria-labelledby="final-cta-title" className="py-16 sm:py-24">
       <div className="mx-auto max-w-6xl px-5">
-        <div className="rounded-[32px] bg-ink px-6 py-12 text-center sm:px-12 sm:py-16">
-          <h2
-            id="final-cta-title"
-            className="mx-auto max-w-xl font-display text-3xl leading-tight text-cream sm:text-5xl"
-          >
-            Make this birthday the one you actually wanted.
-          </h2>
-          <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-cream/70">
-            A card, a few wishes and one link. It takes about a minute, and gifts
-            arrive straight in your wallet.
-          </p>
-          <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-            <Link
-              href="/create"
-              className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-cream px-7 text-base font-semibold text-ink transition hover:bg-white active:scale-[0.98]"
+        <div className="relative overflow-hidden rounded-[32px] bg-ink px-6 py-12 text-center sm:px-12 sm:py-16">
+          {/* A real birthday moment behind the ask, dimmed so the text stays
+              the focus. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/hero/party-gift.jpg"
+            alt=""
+            width={1290}
+            height={860}
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover object-[55%_40%]"
+          />
+          <div aria-hidden className="absolute inset-0 bg-ink/75" />
+
+          <div className="relative">
+            <h2
+              id="final-cta-title"
+              className="mx-auto max-w-xl font-display text-3xl leading-tight text-cream sm:text-5xl"
             >
-              Create your nimDay
-            </Link>
-            <Link
-              href="/dashboard"
-              className="inline-flex min-h-[52px] items-center justify-center rounded-full px-7 text-base font-medium text-cream ring-1 ring-cream/30 transition hover:bg-cream/10 active:scale-[0.98]"
-            >
-              Already have one? Open My nimDay
-            </Link>
+              Make this birthday the one you actually wanted.
+            </h2>
+            <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-cream/70">
+              A card, a few wishes and one link. It takes about a minute, and gifts
+              arrive straight in your wallet.
+            </p>
+            <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+              <Link
+                href="/create"
+                className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-cream px-7 text-base font-semibold text-ink transition hover:bg-white active:scale-[0.98]"
+              >
+                Create your nimDay
+              </Link>
+              <Link
+                href="/dashboard"
+                className="inline-flex min-h-[52px] items-center justify-center rounded-full px-7 text-base font-medium text-cream ring-1 ring-cream/30 transition hover:bg-cream/10 active:scale-[0.98]"
+              >
+                Already have one? Open My nimDay
+              </Link>
+            </div>
+            <p className="mt-4 text-xs text-cream/50">
+              Sign in with the Nimiq wallet you created it with.
+            </p>
           </div>
-          <p className="mt-4 text-xs text-cream/50">
-            Sign in with the Nimiq wallet you created it with.
-          </p>
         </div>
       </div>
     </section>
