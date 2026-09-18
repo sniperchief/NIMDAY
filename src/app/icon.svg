@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- The nimDay gift mark (components/brand/Wordmark.tsx) on a white tile, so
+       it stays visible on dark browser tabs. -->
+  <rect width="32" height="32" rx="7" fill="#fff"/>
+  <g fill="#EF5B2B" transform="translate(-22.75 -1.125) scale(2.5)">
+    <path d="M15.5 5.3 12.9 2.9v2.4Z"/>
+    <path d="M15.5 5.3 18.1 2.9v2.4Z"/>
+    <rect x="11.9" y="5.3" width="3.1" height="1.9" rx="0.45"/>
+    <rect x="16" y="5.3" width="3.1" height="1.9" rx="0.45"/>
+    <rect x="12.5" y="7.7" width="2.5" height="3.1" rx="0.4"/>
+    <rect x="16" y="7.7" width="2.5" height="3.1" rx="0.4"/>
+  </g>
+</svg>
